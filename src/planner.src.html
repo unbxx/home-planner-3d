@@ -325,8 +325,8 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   </div>
 
   <div class="menu panel" id="fileMenu" hidden>
-    <button class="mi" data-act="export">Export layout + models (.json)</button>
-    <button class="mi" data-act="open">Open layout…</button>
+    <button class="mi" data-act="export" title="The house with its furniture, paint, floors and imported models, in one file to keep or send">Export this home (.json)</button>
+    <button class="mi" data-act="open" title="A home, a house or a furniture layout exported from this planner">Open a home or layout…</button>
     <button class="mi" data-act="shot">Save picture of this view (.png)</button>
     <hr>
     <button class="mi danger" data-act="clear">Remove all furniture</button>
@@ -4965,9 +4965,11 @@ $('#fileMenu').onclick = async (e) => {
     }
     const media = {};
     for (const f of Object.values(state.floors || {})) if (f.img && !media[f.img]) { const rec = await getModel(f.img); if (rec && rec.blob) media[f.img] = await blobToData(rec.blob); }
-    const out = { app: 'home-planner', version: 1, house: HOUSE.id, saved: new Date().toISOString(), settings: S, items: JSON.parse(snapshot()).items, paint: state.paint, floors: state.floors, splash: state.splash, doorCfg: state.doorCfg, doorOpen: state.doorOpen, measures: state.measures, models, media };
-    download(`home-planner-layout-${HOUSE.id}-${new Date().toISOString().slice(0, 10)}.json`, new Blob([JSON.stringify(out)], { type: 'application/json' }));
-    toast('Layout exported with ' + Object.keys(models).length + ' imported model(s).');
+    // the house goes along, so the file opens as the whole home in any browser, also one that does not have the house yet
+    const out = { app: 'home-planner', version: 1, house: HOUSE.id, saved: new Date().toISOString(), settings: S, items: JSON.parse(snapshot()).items, paint: state.paint, floors: state.floors, splash: state.splash, doorCfg: state.doorCfg, doorOpen: state.doorOpen, measures: state.measures, models, media, home: await houseFile() };
+    download(`${HOUSE.id}-home-${new Date().toISOString().slice(0, 10)}.json`, new Blob([JSON.stringify(out)], { type: 'application/json' }));
+    const n = Object.keys(models).length;
+    toast(`Home exported: the house, its furniture, paint and floors${n ? ` and ${n} imported model${n === 1 ? '' : 's'}` : ''}. Open it with File → Open.`, 4500);
   } else if (act === 'open') $('#fileLayout').click();
   else if (act === 'shot') {
     renderer.render(scene, activeCam());
@@ -4979,22 +4981,53 @@ $('#fileMenu').onclick = async (e) => {
     toast(`Removed ${n} piece${n === 1 ? '' : 's'}. Undo brings them back.`, 4000);
   }
 };
-$('#fileLayout').onchange = async (e) => {
-  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+// a house as a file: its walls and rooms; a drawn house takes its floor plan picture and room photos along, a built-in plan picture stays out
+async function houseFile() {
+  const { plan, ...geometry } = HOUSE, media = {}, photos = PHOTOS[HOUSE.id];
+  if (plan && plan.img) { geometry.plan = { ...plan }; delete geometry.plan.url; }
+  if (photos) geometry.photos = photos;
+  for (const key of [plan && plan.img, ...Object.values(photos || {}).flat()].filter(Boolean)) { const rec = await getModel(key); if (rec && rec.blob) media[key] = await blobToData(rec.blob); }
+  if (Object.keys(media).length) geometry.media = media;
+  return geometry;
+}
+async function addHouseFile(raw, fileName) {
+  if (!raw.name) raw.name = fileName.replace(/\.json$/i, '').replace(/[_-]+/g, ' ');
+  const { media, photos, ...geometry } = raw, h = normalizeHouse(geometry);
+  for (const [key, data] of Object.entries(media || {})) if (/^img:[\w-]+$/.test(key) && /^data:image\//.test(data)) await putModel(key, { kind: 'img', blob: dataToBlob(data), name: key });
+  if (photos && typeof photos === 'object') { PHOTOS[h.id] = photos; ls.set(PHOTO_STORE, JSON.stringify(PHOTOS)); }
+  addHouse(h);
+  resolvePlan();
+  return h;
+}
+// File → Open and Import a house take any file this planner writes, from this copy or another one: a whole home, a house, or a layout on its own
+async function openHomeFile(f) {
+  let data;
+  try { data = JSON.parse(await f.text()); } catch (err) { toast('This file could not be read. Choose a .json file exported from this planner.', 4000); return; }
+  const layout = data && Array.isArray(data.items) && (!data.app || /planner/i.test(data.app)), houseOnly = data && !layout && Array.isArray(data.walls) && Array.isArray(data.floors);
+  if (!layout && !houseOnly) { toast('This file is not a home, house or layout from this planner.', 4000); return; }
   try {
-    const data = JSON.parse(await f.text());
-    if (data.app !== 'home-planner' || !Array.isArray(data.items)) throw new Error('not a layout');
-    for (const [key, m] of Object.entries(data.models || {})) await putModel(key, { name: m.name, main: m.main, files: m.files.map((x) => ({ name: x.name, data: unb64(x.data) })) });
-    for (const [key, d] of Object.entries(data.media || {})) if (/^img:[\w-]+$/.test(key) && /^data:image\//.test(d)) await putModel(key, { kind: 'img', blob: dataToBlob(d), name: key });
-    rawModels.clear(); templates.clear();
-    for (const id of [...views.keys()]) removeView(id);
-    state.items = data.items; state.measures = data.measures || []; state.paint = data.paint || {};
-    state.doorCfg = data.doorCfg || {}; state.doorOpen = data.doorOpen || {}; state.splash = data.splash || {}; state.floors = data.floors || {}; buildHouse(); renderRooms();
-    applyPaint(); renderPaintPanel();
-    select(null); syncAll(); renderMeasures(); commit();
-    toast(data.house && data.house !== HOUSE.id ? `Opened ${f.name}. It was made for ${HOUSES[data.house] ? HOUSES[data.house].name : 'another house'}, so pieces may stand in odd places.` : 'Opened ' + f.name, 5000);
-  } catch (err) { toast('This file is not a home planner layout.'); }
-};
+    if (houseOnly) { await addHouseFile(data, f.name); return; }
+    let home = data.home && Array.isArray(data.home.walls) ? data.home : null;
+    const have = home && HOUSES[home.id];
+    if (home && have && JSON.stringify(normalizeHouse(home).walls) !== JSON.stringify(normalizeHouse(have).walls)) home = { ...home, id: houseSlug(home.name || 'house') }; // another house under the same name keeps its own
+    if (home && !HOUSES[home.id]) await addHouseFile(home, f.name);
+    else { const id = home ? home.id : data.house; if (id && HOUSES[id] && id !== HOUSE.id) switchHouse(id); }
+    await openLayout(data, f.name);
+  } catch (err) { console.error(err); toast('This file could not be opened.', 4000); }
+}
+async function openLayout(data, name) {
+  for (const [key, m] of Object.entries(data.models || {})) await putModel(key, { name: m.name, main: m.main, files: m.files.map((x) => ({ name: x.name, data: unb64(x.data) })) });
+  for (const [key, d] of Object.entries(data.media || {})) if (/^img:[\w-]+$/.test(key) && /^data:image\//.test(d)) await putModel(key, { kind: 'img', blob: dataToBlob(d), name: key });
+  rawModels.clear(); templates.clear();
+  for (const id of [...views.keys()]) removeView(id);
+  state.items = data.items; state.measures = data.measures || []; state.paint = data.paint || {};
+  state.doorCfg = data.doorCfg || {}; state.doorOpen = data.doorOpen || {}; state.splash = data.splash || {}; state.floors = data.floors || {}; buildHouse(); renderRooms();
+  applyPaint(); renderPaintPanel();
+  select(null); syncAll(); renderMeasures(); commit();
+  const other = data.house && data.house !== HOUSE.id && !(data.home && data.home.name === HOUSE.name);
+  toast(other ? `Opened ${name}, but it was made for ${HOUSES[data.house] ? HOUSES[data.house].name : 'a house that is not in this browser'}, so pieces may stand in odd places. Export it again with File → Export this home to take the house along.` : `Opened ${name}.`, other ? 7000 : 3000);
+}
+$('#fileLayout').onchange = (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) openHomeFile(f); };
 
 /* ---------- houses ---------- */
 // fill in what a house file may leave out, so a hand-made or imported house still builds
@@ -5112,32 +5145,15 @@ $('#houseMenu').onclick = async (e) => {
   closeMenus();
   if (act.dataset.hact === 'import') $('#fileHouse').click();
   else if (act.dataset.hact === 'export') {
-    // a built-in plan picture stays out; a drawn house takes its floor plan and room photos along
-    const { plan, ...geometry } = HOUSE, media = {}, photos = PHOTOS[HOUSE.id];
-    if (plan && plan.img) { geometry.plan = { ...plan }; delete geometry.plan.url; }
-    if (photos) geometry.photos = photos;
-    for (const key of [plan && plan.img, ...Object.values(photos || {}).flat()].filter(Boolean)) { const rec = await getModel(key); if (rec && rec.blob) media[key] = await blobToData(rec.blob); }
-    if (Object.keys(media).length) geometry.media = media;
+    const geometry = await houseFile();
     download(`${HOUSE.id}-house.json`, new Blob([JSON.stringify(geometry, null, 1)], { type: 'application/json' }));
-    toast(Object.keys(media).length ? 'House exported with its floor plan and photos.' : 'House exported. Change it and import it again to update this house.', 4000);
+    toast(geometry.media ? 'House exported with its floor plan and photos.' : 'House exported. Change it and import it again to update this house.', 4000);
   } else if (act.dataset.hact === 'draw') openBuilder(false);
   else if (act.dataset.hact === 'edit') edStart();
   else if (act.dataset.hact === 'redraw') openBuilder(true);
   else if (act.dataset.hact === 'new') { $('#houseModal').hidden = false; $('#hmName').focus(); $('#hmName').select(); }
 };
-$('#fileHouse').onchange = async (e) => {
-  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
-  try {
-    const raw = JSON.parse(await f.text());
-    if (raw.app === 'home-planner') { toast('This is a furniture layout. Open it with File → Open layout.', 4000); return; }
-    if (!raw.name) raw.name = f.name.replace(/\.json$/i, '').replace(/[_-]+/g, ' ');
-    const { media, photos, ...geometry } = raw, h = normalizeHouse(geometry);
-    for (const [key, data] of Object.entries(media || {})) if (/^img:[\w-]+$/.test(key) && /^data:image\//.test(data)) await putModel(key, { kind: 'img', blob: dataToBlob(data), name: key });
-    if (photos && typeof photos === 'object') { PHOTOS[h.id] = photos; ls.set(PHOTO_STORE, JSON.stringify(PHOTOS)); }
-    addHouse(h);
-    resolvePlan();
-  } catch (err) { toast('This file is not a house. It needs at least walls and a floor.'); }
-};
+$('#fileHouse').onchange = (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) openHomeFile(f); };
 $('#hmCancel').onclick = () => { $('#houseModal').hidden = true; };
 $('#hmOk').onclick = () => {
   const W = clamp(parseFloat($('#hmW').value) / 100 || 4, 1.5, 30), D = clamp(parseFloat($('#hmD').value) / 100 || 6, 1.5, 30), Hc = clamp(parseFloat($('#hmH').value) / 100 || 2.6, 2.1, 4);
@@ -7400,10 +7416,10 @@ $('#impOk').onclick = () => {
 };
 $('#importModal').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#impOk').click(); if (e.key === 'Escape') $('#impCancel').click(); });
 let dragDepth = 0;
-window.addEventListener('dragenter', (e) => { if (e.dataTransfer?.types?.includes('Files')) { dragDepth++; $('#drop').textContent = BLD.open ? 'Drop a picture of the floor plan, or photos of the selected room' : 'Drop a 3D model to import it'; $('#drop').hidden = false; } });
+window.addEventListener('dragenter', (e) => { if (e.dataTransfer?.types?.includes('Files')) { dragDepth++; $('#drop').textContent = BLD.open ? 'Drop a picture of the floor plan, or photos of the selected room' : 'Drop a 3D model to import it, or a home or layout file (.json) to open it'; $('#drop').hidden = false; } });
 window.addEventListener('dragleave', () => { dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) $('#drop').hidden = true; });
 window.addEventListener('dragover', (e) => e.preventDefault());
-window.addEventListener('drop', (e) => { e.preventDefault(); dragDepth = 0; $('#drop').hidden = true; const files = [...(e.dataTransfer?.files || [])]; if (files.length) (BLD.open ? builderDrop(files) : importFiles(files)); });
+window.addEventListener('drop', (e) => { e.preventDefault(); dragDepth = 0; $('#drop').hidden = true; const files = [...(e.dataTransfer?.files || [])]; if (!files.length) return; const json = !BLD.open && files.find((f) => /\.json$/i.test(f.name)); if (json) openHomeFile(json); else (BLD.open ? builderDrop(files) : importFiles(files)); });
 
 /* ---------- wiring and start ---------- */
 $$('#viewSeg button').forEach((b) => (b.onclick = () => setView(b.dataset.view)));

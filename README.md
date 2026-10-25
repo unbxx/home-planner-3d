@@ -69,7 +69,7 @@ The plan picture becomes the house's floor plan overlay (Settings → Floor plan
 
 ## Sharing
 
-- *File → Export* saves your furniture layout, paint and floors (with any imported models and floor pictures) as one `.json` file; a friend opens it with *File → Open*.
+- *File → Export this home* saves the house with its furniture, paint and floors (and any imported models, floor pictures, floor plan picture and room photos) as one `.json` file. *File → Open*, or dropping the file on the view, opens it in any browser; the house is added if that browser does not have it yet. Open also takes a house file on its own, or a layout from an earlier version.
 - From the house menu, *Export this house* saves the house itself (walls, rooms, kitchen…) as a `.json` file; a drawn house takes its floor plan picture and room photos along. *Import a house* adds one. Importing a house with the same `id` as one you have replaces it and keeps the furniture placed in it.
 
 ## Adding a real house by hand
