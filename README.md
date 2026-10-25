@@ -17,7 +17,7 @@ Everything you do is saved in your own browser, per house. Nothing is uploaded a
 
 ## What it can do
 
-- **Views**: orbit the whole home, look straight down, or walk through it (W A S D or arrow keys, drag to look, double-click the floor to go there). Doors open and close (double-click, or E while walking).
+- **Views**: orbit the whole home, look straight down, or walk through it (W A S D or arrow keys, drag to look, double-click the floor to go there). **Look around** (L) in walk view turns your head with the mouse alone, as in a game, so you can wander without clicking anything; Esc stops. While walking, a piece moves only after you click it first, so looking around never drags furniture by accident. Doors open and close (double-click, or E while walking).
 - **Edit house**: change walls, doors, windows, columns, beams and rooms right in the 3D, plan and walk views.
 - **Floors**: a floor per room, from nineteen designs or a photo of your own.
 - **Kitchen and bathroom**: cabinets, appliances, sinks, washbasins, mirrors, showers, baths and toilets, each with its own fronts, handles and colours.

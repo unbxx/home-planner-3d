@@ -272,6 +272,14 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .optypes.parts { margin-top: 6px; }
 .row[hidden] { display: none; }
 
+/* looking around in walk view */
+.crosshair { position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px; pointer-events: none; z-index: 3; }
+.crosshair[hidden] { display: none; }
+.crosshair::before, .crosshair::after { content: ''; position: absolute; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.45); border-radius: 1px; }
+.crosshair::before { left: 8px; top: 0; width: 2px; height: 18px; }
+.crosshair::after { left: 0; top: 8px; width: 18px; height: 2px; }
+@media (pointer: coarse) { #lookBox { display: none !important; } }
+
 @media (max-width: 860px) {
   .bside { top: auto; height: 44%; width: auto; right: var(--space-3); }
   .bhint, .bhead .brand { display: none; }
@@ -296,6 +304,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 <div id="app">
   <div id="view"></div>
   <div id="labels" aria-hidden="true"></div>
+  <div class="crosshair" id="crosshair" hidden></div>
 
   <header class="topbar">
     <button class="tools panel" id="btnSide" title="Show or hide the furniture panel" style="padding:3px"><span class="xbtn" style="width:32px;height:32px"><svg class="i" viewBox="0 0 16 16"><rect x="2" y="2.5" width="12" height="11" rx="1.5"/><path d="M6 2.5v11"/></svg></span></button>
@@ -308,6 +317,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
       <button data-view="plan" title="Look straight down (2)">Plan</button>
       <button data-view="walk" title="Walk through at eye height (3)">Walk</button>
     </div>
+    <div class="tools panel" id="lookBox"><button id="btnLook" title="Look around by moving the mouse, without dragging (L). Esc stops."><svg class="i" viewBox="0 0 16 16"><path d="M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/></svg><span class="lbltxt">Look around</span></button></div>
     <div class="seg panel" id="wallSeg" role="group" aria-label="Walls">
       <button data-walls="up" title="All walls full height">Walls up</button>
       <button data-walls="cut" title="Lower the outside walls that face you">Cutaway</button>
@@ -4477,6 +4487,7 @@ $('#btnSide').onclick = () => { S.side = !S.side; $('#side').classList.toggle('c
 /* ---------- placing ---------- */
 let placing = null, placingKit = null;
 function startPlacing(it, kit = null) {
+  stopLook();
   if (ED.on) edClose();
   if (floorRoom) closeFloorPanel();
   if (selDoor) selectDoor(null);
@@ -4668,13 +4679,14 @@ function edHintText() {
 function setHint() {
   const h = $('#hint');
   let t;
-  if (ED.on) t = edHintText();
+  if (LOOK.on) t = LOOK.locked ? 'Move the mouse to look around · W A S D or arrows to walk, Shift to go faster · E opens the door in the middle · Esc stops' : 'Move the mouse over the view to look around · W A S D to walk · E opens the door in the middle · click to lock the mouse · Esc or L stops';
+  else if (ED.on) t = edHintText();
   else if (floorRoom) t = 'Pick a floor, or use ‹ › to go through them · Esc closes the panel';
   else if (state.tool === 'place') t = placing && PRESETS[placing.preset] && PRESETS[placing.preset].blinds ? 'Point at a window and click: the blind fits that pane · Alt: place it freely · Esc cancels' : 'Move over the floor and click to place · R rotates · Alt: no snapping · Esc cancels';
   else if (state.tool === 'paint') t = 'Click a wall, frame, door or radiator to paint it · Shift-click: all walls of the room · Alt-click: pick up a colour · Esc stops';
   else if (state.tool === 'measure') t = msStart ? 'Click the second point · Esc cancels' : 'Click two points to measure · snaps to wall corners · Alt: no snapping';
   else if (state.selected) t = 'Drag to move · R / Shift+R rotate · arrows nudge 1 cm (Shift: 10 cm) · Ctrl/⌘+D duplicate · Del removes';
-  else if (S.view === 'walk') t = 'W A S D or arrows to walk · drag to look around · E or double-click opens and closes a door · double-click the floor to go there';
+  else if (S.view === 'walk') t = 'W A S D or arrows to walk · drag to look around, or L to look with the mouse alone · click a piece, then drag it to move it · E opens a door';
   else if (selDoor) t = selDoor === 'splash' ? 'Choose the material of the back panel and worktop, and the panel’s shape · Esc closes the panel' : 'Double-click a door to open or close it · Esc closes the door panel';
   else if (S.view === 'plan') t = 'Drag to pan · scroll to zoom · click a piece to select it';
   else t = 'Drag to orbit · right-drag to pan · scroll to zoom · click a piece to select it';
@@ -4686,9 +4698,11 @@ function setHint() {
 let camAnim = null;
 function setView(v) {
   if (v === S.view) return;
+  if (v !== 'walk') stopLook();
   S.view = v;
   $$('#viewSeg button').forEach((b) => b.classList.toggle('on', b.dataset.view === v));
   $('#wallSeg').style.display = v === 'orbit' ? '' : 'none';
+  $('#lookBox').style.display = v === 'walk' ? '' : 'none';
   orbit.enabled = v === 'orbit';
   planCtl.enabled = v === 'plan';
   walk.keys.clear();
@@ -4789,6 +4803,8 @@ host.addEventListener('pointerdown', (e) => {
   if (e.target !== renderer.domElement) return;
   renderer.domElement.focus({ preventScroll: true });
   closeMenus();
+  // while looking around a click does nothing but lock the pointer again
+  if (LOOK.on) { e.stopPropagation(); e.preventDefault(); down = null; if (!LOOK.locked) lockLook(); return; }
   setNdc(e);
   down = { x: e.clientX, y: e.clientY, t: performance.now(), button: e.button };
   if (e.button !== 0) return;
@@ -4812,6 +4828,11 @@ host.addEventListener('pointerdown', (e) => {
     e.stopPropagation(); return;
   }
   const hit = pickItem();
+  if (hit && S.view === 'walk' && state.selected !== hit.id) {
+    // in walk view a piece moves only once it is selected, so dragging to look around never moves one by accident
+    look = { x: e.clientX, y: e.clientY, pid: e.pointerId }; renderer.domElement.setPointerCapture(e.pointerId);
+    return;
+  }
   if (hit) {
     const it = itemById(hit.id);
     select(hit.id);
@@ -4826,6 +4847,7 @@ host.addEventListener('pointerdown', (e) => {
   if (S.view === 'walk') { look = { x: e.clientX, y: e.clientY, pid: e.pointerId }; renderer.domElement.setPointerCapture(e.pointerId); }
 }, true);
 window.addEventListener('pointermove', (e) => {
+  if (LOOK.on) return;
   if (ED.on && ED.drag) { edDragMove(e); return; }
   if (placing) { if (e.target === renderer.domElement) movePlacing(e); return; }
   if (state.tool === 'measure' && msStart && e.target === renderer.domElement) {
@@ -4882,11 +4904,12 @@ window.addEventListener('pointerup', (e) => {
   }
   if (down && down.button === 0 && e.target === renderer.domElement && !state.tool) {
     const still = Math.hypot(e.clientX - down.x, e.clientY - down.y) < 5 && performance.now() - down.t < 500;
-    if (still) { setNdc(e); if (!pickItem()) { select(null); selectDoor(pickDoor()); } }
+    if (still) { setNdc(e); const hp = pickItem(); if (hp) { if (state.selected !== hp.id) select(hp.id); } else { select(null); selectDoor(pickDoor()); } }
   }
   down = null;
 });
 renderer.domElement.addEventListener('dblclick', (e) => {
+  if (LOOK.on) return;
   if (ED.on) { if (ED.tool === 'walls' && ED.chain) { ED.chain = null; edOverlay(); setHint(); } return; }
   if (state.tool) return;
   setNdc(e);
@@ -4903,12 +4926,54 @@ renderer.domElement.addEventListener('lostpointercapture', () => { if (look) { l
 renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
 host.addEventListener('pointerleave', () => { if (placing) { views.get(placing.id).root.visible = false; invalidate(); } });
 
+/* ---------- looking around in walk view by moving the mouse, with nothing to click or drag ---------- */
+// The pointer is locked to the view, as in a game; where a page may not lock it (some embedded previews), the view follows the mouse while it moves over it.
+const LOOK = { on: false, locked: false, wasLocked: false };
+function startLook() {
+  if (LOOK.on) return;
+  if (S.view !== 'walk') setView('walk');
+  if (state.tool) cancelTool();
+  select(null);
+  if (selDoor) selectDoor(null);
+  Object.assign(LOOK, { on: true, wasLocked: false });
+  $('#btnLook').classList.add('on'); $('#crosshair').hidden = false;
+  lockLook(); setHint();
+}
+function lockLook() {
+  try { const p = renderer.domElement.requestPointerLock(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* the page may not lock the pointer: the view follows the mouse instead */ }
+}
+function stopLook() {
+  if (!LOOK.on) return;
+  LOOK.on = false;
+  if (document.pointerLockElement === renderer.domElement) document.exitPointerLock();
+  $('#btnLook').classList.remove('on'); $('#crosshair').hidden = true;
+  setHint();
+}
+const toggleLook = () => (LOOK.on ? stopLook() : startLook());
+document.addEventListener('pointerlockchange', () => {
+  LOOK.locked = document.pointerLockElement === renderer.domElement;
+  // Esc releases the pointer, and that ends looking around
+  if (LOOK.locked) LOOK.wasLocked = true;
+  else if (LOOK.on && LOOK.wasLocked) stopLook();
+  setHint();
+});
+window.addEventListener('mousemove', (e) => {
+  if (!LOOK.on || S.view !== 'walk' || (!LOOK.locked && e.target !== renderer.domElement)) return;
+  const k = 0.0028, mx = clamp(e.movementX || 0, -150, 150), my = clamp(e.movementY || 0, -150, 150);
+  walk.yaw -= mx * k;
+  walk.pitch = clamp(walk.pitch - my * k, -1.1, 1.1);
+  invalidate();
+});
+$('#btnLook').onclick = toggleLook;
+
 /* ---------- keyboard ---------- */
 const typing = (e) => { const t = e.target; return t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA' || t.isContentEditable); };
 window.addEventListener('keydown', (e) => {
   if (typing(e)) { if (e.key === 'Escape') e.target.blur(); return; }
   const k = e.key.toLowerCase(), mod = e.ctrlKey || e.metaKey;
   if (mod || e.altKey) walk.keys.clear();
+  if (LOOK.on && k === 'escape') { stopLook(); return; }
+  if (!mod && k === 'l') { toggleLook(); return; }
   if (floorRoom && k === 'escape') { closeFloorPanel(); return; }
   if (ED.on && edKey(e)) return;
   if (!mod && k === 'b' && !ED.on) { edStart(); return; }
