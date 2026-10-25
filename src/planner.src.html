@@ -165,6 +165,67 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .lbl.ms button:hover { opacity: 1; }
 .lbl.ms.live { padding-right: 8px; pointer-events: none; }
 
+.menu .mi[hidden] { display: none; }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.danger.sure { background: var(--clash-tint); }
+.dims.two { grid-template-columns: 1fr 1fr; }
+.toast { z-index: 70; }
+.drop { z-index: 66; }
+
+/* room photos */
+.rph { display: flex; flex-wrap: wrap; gap: 4px; padding: 0 8px 8px; }
+.rph .ph { width: 46px; height: 46px; padding: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; cursor: pointer; background: var(--surface-sunk); }
+.rph img, .thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rph .missing, .thumbs .missing { background: repeating-linear-gradient(45deg, var(--surface-sunk) 0 6px, var(--surface) 6px 12px); }
+.rph .add { border: 0; background: transparent; color: var(--ink-muted); font-size: 12px; padding: 2px 6px; cursor: pointer; border-radius: 6px; }
+.rph .add.sq { width: 46px; height: 46px; border: 1px dashed var(--line-strong); font-size: 18px; padding: 0; }
+.rph .add:hover { color: var(--ink); background: var(--surface-sunk); }
+.photo-back { background: rgba(20,19,18,.84); z-index: 60; }
+.pbox { display: flex; flex-direction: column; gap: 10px; max-width: 100%; max-height: 100%; align-items: center; }
+.pbox img { max-width: min(1200px, calc(100vw - 32px)); max-height: calc(100vh - 120px); min-width: 120px; min-height: 80px; object-fit: contain; border-radius: var(--radius-md); background: #111; }
+.pbar { display: flex; gap: 6px; align-items: center; color: #fff; font-size: 13px; width: 100%; }
+.pbar .grow { flex: 1; }
+.pbar .btn:not(.primary) { color: var(--ink); }
+.pbar .btn.sure { color: var(--clash); }
+
+/* drawing a house from its floor plan */
+.builder { position: absolute; inset: 0; z-index: 45; background: var(--canvas); }
+.builder[hidden] { display: none; }
+.bstage { position: absolute; inset: 0; }
+.bstage canvas { display: block; width: 100%; height: 100%; touch-action: none; outline: none; }
+.bhead { position: absolute; top: var(--space-3); left: var(--space-3); right: var(--space-3); display: flex; gap: var(--space-2); align-items: stretch; z-index: 2; pointer-events: none; flex-wrap: wrap; }
+.bhead > * { pointer-events: auto; }
+.bhead .spacer { flex: 1; pointer-events: none; }
+.bsteps { overflow-x: auto; }
+.bsteps button .n { width: 18px; height: 18px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 11px; font-weight: 650; background: var(--surface-sunk); color: var(--ink-muted); }
+.bsteps button.on .n { background: rgba(255,255,255,.22); color: var(--ink-inverse); }
+.bsteps button.done .n { background: var(--select); color: var(--ink-inverse); }
+.bsteps button:disabled { opacity: .45; cursor: default; background: transparent; }
+.bside { position: absolute; top: 72px; left: var(--space-3); bottom: var(--space-3); width: 300px; overflow-y: auto; padding: var(--space-3) var(--space-4) var(--space-4); z-index: 2; }
+.bside .bp { margin: 6px 0 0; }
+.bnav { display: flex; gap: 6px; align-items: center; margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--line); }
+.bnav .spacer { flex: 1; }
+.chips { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+.chips button { border: 1px solid var(--line-strong); background: var(--surface); border-radius: 999px; padding: 2px 10px; font-size: 12px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.chips button.on { background: var(--ink); color: var(--ink-inverse); border-color: var(--ink); }
+.optypes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: var(--space-3); }
+.optypes button { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius-md); padding: 7px 9px; text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 1px; }
+.optypes button:hover { background: var(--surface-sunk); }
+.optypes button.on { border-color: var(--select); background: var(--select-tint); }
+.optypes b { font-size: 12.5px; font-weight: 600; line-height: 16px; }
+.optypes span { font-size: 11.5px; line-height: 14px; color: var(--ink-muted); }
+.blist { margin-top: var(--space-2); }
+.thumbs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.thumbs button { aspect-ratio: 1; padding: 0; border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; cursor: pointer; background: var(--surface-sunk); }
+.thumbs button.add { border-style: dashed; border-color: var(--line-strong); font-size: 20px; color: var(--ink-muted); background: var(--surface); }
+.bzoom { position: absolute; right: var(--space-3); bottom: var(--space-3); z-index: 2; }
+.bhint { left: calc(50% + 162px); max-width: calc(100% - 360px); }
+@media (max-width: 860px) {
+  .bside { top: auto; height: 44%; width: auto; right: var(--space-3); }
+  .bhint, .bhead .brand { display: none; }
+  .bzoom { bottom: calc(44% + 20px); }
+}
+
 @media (max-width: 860px) {
   .brand-sub, .tools .lbltxt { display: none; }
   .side { top: auto; height: 46%; width: auto; right: var(--space-3); }
@@ -240,6 +301,8 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     <div class="cap" style="margin:4px 6px 4px">Houses</div>
     <div id="houseList"></div>
     <hr>
+    <button class="mi" data-hact="draw">Draw a house from its floor plan…</button>
+    <button class="mi" data-hact="redraw" id="hmRedraw" hidden>Edit this house’s drawing…</button>
     <button class="mi" data-hact="new">New house from its size…</button>
     <button class="mi" data-hact="import">Import a house (.json)…</button>
     <button class="mi" data-hact="export">Export this house (.json)</button>
@@ -311,11 +374,45 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     </div>
   </div>
 
+  <div class="builder" id="builder" hidden>
+    <div class="bstage"><canvas id="bCanvas" tabindex="0" aria-label="The floor plan, with the walls, doors, windows and rooms drawn on it"></canvas></div>
+    <header class="bhead">
+      <div class="brand panel"><span class="brand-name">Draw a house</span><span class="brand-sub" id="bSub">from its floor plan</span></div>
+      <nav class="seg panel bsteps" id="bSteps" aria-label="Steps">
+        <button data-bstep="plan"><span class="n">1</span>Floor plan</button>
+        <button data-bstep="scale"><span class="n">2</span>Scale</button>
+        <button data-bstep="walls"><span class="n">3</span>Walls</button>
+        <button data-bstep="open"><span class="n">4</span>Doors &amp; windows</button>
+        <button data-bstep="rooms"><span class="n">5</span>Rooms &amp; photos</button>
+        <button data-bstep="finish"><span class="n">6</span>Build</button>
+      </nav>
+      <div class="spacer"></div>
+      <div class="tools panel">
+        <button id="bUndo" class="icon" title="Undo (Ctrl/⌘+Z)" aria-label="Undo"><svg class="i" viewBox="0 0 16 16"><path d="M5.5 3 2.5 6l3 3"/><path d="M2.5 6h7a4 4 0 0 1 0 8H7"/></svg></button>
+        <button id="bRedo" class="icon" title="Redo (Ctrl/⌘+Shift+Z)" aria-label="Redo"><svg class="i" viewBox="0 0 16 16"><path d="M10.5 3l3 3-3 3"/><path d="M13.5 6h-7a4 4 0 0 0 0 8H9"/></svg></button>
+        <span class="sep"></span>
+        <button id="bClose" title="Close; the drawing is kept in this browser">Close</button>
+      </div>
+    </header>
+    <aside class="bside panel" id="bSide"></aside>
+    <div class="bzoom tools panel"><button id="bZoomOut" class="icon" title="Zoom out (−)" aria-label="Zoom out">−</button><button id="bZoomFit" title="Fit the picture (0)">Fit</button><button id="bZoomIn" class="icon" title="Zoom in (+)" aria-label="Zoom in">+</button></div>
+    <div class="hint bhint" id="bHint"></div>
+  </div>
+
+  <div class="modal-back photo-back" id="photoBox" hidden>
+    <div class="pbox" role="dialog" aria-modal="true" aria-label="Room photo">
+      <img id="pbImg" alt="">
+      <div class="pbar"><span class="grow" id="pbCap"></span><button class="btn sm" id="pbDel">Remove</button><button class="btn sm" id="pbPrev" aria-label="Previous photo">←</button><button class="btn sm" id="pbNext" aria-label="Next photo">→</button><button class="btn sm primary" id="pbClose">Close</button></div>
+    </div>
+  </div>
+
   <div class="drop" id="drop" hidden>Drop a 3D model to import it</div>
   <div class="loading" id="loading">Building the house…</div>
   <input type="file" id="fileModel" multiple hidden accept=".glb,.gltf,.bin,.obj,.mtl,.stl,.fbx,.png,.jpg,.jpeg,.webp,.ktx2">
   <input type="file" id="fileLayout" hidden accept=".json,application/json">
   <input type="file" id="fileHouse" hidden accept=".json,application/json">
+  <input type="file" id="filePlan" hidden accept="image/*">
+  <input type="file" id="filePhotos" hidden multiple accept="image/*">
 </div>
 
 <script>
@@ -861,7 +958,7 @@ function buildWall(F, W) {
   let cur = F.lo, farJamb = null; // the far side of a window's reveal belongs to the next stretch of wall
   for (const o of ops) {
     const win = o.t === 'window';
-    const y0 = win ? (o.y0 ?? HOUSE.sill) : 0, y1 = Math.min(win ? (o.y1 ?? HOUSE.winTop) : (o.h ?? HOUSE.doorH), Hc - 0.04);
+    const gap = o.t === 'gap', y0 = win ? (o.y0 ?? HOUSE.sill) : 0, y1 = Math.min(win ? (o.y1 ?? HOUSE.winTop) : (o.h ?? HOUSE.doorH), gap ? Hc : Hc - 0.04); // an opening without a door may go up to the ceiling
     const before = solid(cur, o.a);
     if (farJamb && before.length) farJamb(before[0]);
     farJamb = null;
@@ -879,7 +976,7 @@ function buildWall(F, W) {
     }
     if (win) {
       windowParts(F, o.a, o.b, y0, y1, false, z ? { key: `frame:${W.id}:${o.a}`, zone: z[0], kind: 'frame', label: `Window frame, ${ZONE_NAMES[z[0]]} (${sideName(z[1])})` } : null);
-    } else doorParts(F, o, y1, W);
+    } else if (!gap) doorParts(F, o, y1, W);
     if (z && (win || o.glazed)) {
       // wide windows have a mullion and get one blind per pane, as in the photos; balcony doors one per leaf
       const span = o.b - o.a, m = win ? (span > 2.0 ? o.a + span * 0.36 : null) : (o.a + o.b) / 2;
@@ -3163,9 +3260,10 @@ function newPresetItem(key) {
 function renderRooms() {
   $('#roomList').innerHTML = HOUSE.rooms.map((r) => {
     const a = r.pts ? polyArea(r.pts) : null;
-    return `<div class="list-row" data-room="${r.id}" role="button" tabindex="0"><div class="grow"><div class="t">${esc(r.name)}</div><div class="s num">${a ? a.toFixed(1) + ' m²' : 'part of ' + esc(HOUSE.rooms[0].name)}${r.note ? ' · ' + esc(r.note) : ''}</div></div><span class="s">Go</span></div>`;
+    return `<div class="list-row" data-room="${r.id}" role="button" tabindex="0"><div class="grow"><div class="t">${esc(r.name)}</div><div class="s num">${a ? a.toFixed(1) + ' m²' : 'part of ' + esc(HOUSE.rooms[0].name)}${r.note ? ' · ' + esc(r.note) : ''}</div></div><span class="s">Go</span></div>${roomPhotoStrip(r)}`;
   }).join('') + `<p class="muted small" style="margin:12px 4px 0">${HOUSE.note ? esc(HOUSE.note) + ' ' : 'Areas are measured inside the walls from the floor plan. '}Ceiling height is ${cm(S.ceiling)} cm (estimated, change it in Settings).</p>`;
   $$('#roomList .list-row').forEach((el) => { el.onclick = () => goRoom(el.dataset.room); el.onkeydown = (e) => { if (e.key === 'Enter') goRoom(el.dataset.room); }; });
+  wireRoomPhotos();
 }
 function renderPlaced() {
   $('#placedCount').textContent = state.items.length;
@@ -3741,7 +3839,7 @@ function switchHouse(id, force = false) {
   houseDefaults();
   placeCameras();
   const v = S.view; S.view = null;
-  buildHouse(); renderRooms(); syncAll(); renderPlaced(); renderMeasures();
+  buildHouse(); renderRooms(); syncAll(); renderPlaced(); renderMeasures(); resolvePlan();
   setView(v || 'orbit'); setWalls(S.walls || 'cut');
   history.undo = []; history.redo = []; history.last = snapshot(); updateUndo();
   showHouseName(); setHint(); resize(); save();
@@ -3781,19 +3879,22 @@ $('#btnHouse').onclick = (e) => {
   closeMenus();
   if (!open) return;
   renderHouseMenu();
+  $('#hmRedraw').hidden = !HOUSE.draft;
+  $('[data-hact="draw"]').textContent = loadDrawing(null) ? 'Continue drawing a house…' : 'Draw a house from its floor plan…';
   const r = $('#btnHouse').getBoundingClientRect(), a = $('#app').getBoundingClientRect();
   m.style.left = Math.max(8, r.left - a.left) + 'px';
   m.hidden = false;
 };
-$('#houseMenu').onclick = (e) => {
+$('#houseMenu').onclick = async (e) => {
   const sw = e.target.closest('[data-house]'), un = e.target.closest('[data-unhouse]'), act = e.target.closest('[data-hact]');
   if (sw) { switchHouse(sw.dataset.house); return; }
   if (un) {
     e.stopPropagation();
     // the first click asks, the second removes
     if (!un.classList.contains('sure')) { un.classList.add('sure'); un.textContent = BUILT_IN[un.dataset.unhouse] ? 'Reset?' : 'Remove?'; return; }
-    const id = un.dataset.unhouse, name = myHouses[id] ? myHouses[id].name : id;
+    const id = un.dataset.unhouse, gone = myHouses[id], name = gone ? gone.name : id;
     delete myHouses[id]; ls.set(HOUSE_STORE, JSON.stringify(myHouses));
+    if (!BUILT_IN[id]) forgetHouse(id, gone);
     if (BUILT_IN[id]) HOUSES[id] = BUILT_IN[id]; else delete HOUSES[id];
     if (id === HOUSE.id) { switchHouse(BUILT_IN[id] ? id : Object.keys(BUILT_IN)[0], true); return; }
     renderHouseMenu(); toast(BUILT_IN[id] ? `${name} is back to the built-in version.` : `Removed ${name}.`);
@@ -3803,10 +3904,17 @@ $('#houseMenu').onclick = (e) => {
   closeMenus();
   if (act.dataset.hact === 'import') $('#fileHouse').click();
   else if (act.dataset.hact === 'export') {
-    const { plan, ...geometry } = HOUSE; // the plan picture is not part of the house itself
+    // a built-in plan picture stays out; a drawn house takes its floor plan and room photos along
+    const { plan, ...geometry } = HOUSE, media = {}, photos = PHOTOS[HOUSE.id];
+    if (plan && plan.img) { geometry.plan = { ...plan }; delete geometry.plan.url; }
+    if (photos) geometry.photos = photos;
+    for (const key of [plan && plan.img, ...Object.values(photos || {}).flat()].filter(Boolean)) { const rec = await getModel(key); if (rec && rec.blob) media[key] = await blobToData(rec.blob); }
+    if (Object.keys(media).length) geometry.media = media;
     download(`${HOUSE.id}-house.json`, new Blob([JSON.stringify(geometry, null, 1)], { type: 'application/json' }));
-    toast('House exported. Change it and import it again to update this house.', 4000);
-  } else if (act.dataset.hact === 'new') { $('#houseModal').hidden = false; $('#hmName').focus(); $('#hmName').select(); }
+    toast(Object.keys(media).length ? 'House exported with its floor plan and photos.' : 'House exported. Change it and import it again to update this house.', 4000);
+  } else if (act.dataset.hact === 'draw') openBuilder(false);
+  else if (act.dataset.hact === 'redraw') openBuilder(true);
+  else if (act.dataset.hact === 'new') { $('#houseModal').hidden = false; $('#hmName').focus(); $('#hmName').select(); }
 };
 $('#fileHouse').onchange = async (e) => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
@@ -3814,7 +3922,11 @@ $('#fileHouse').onchange = async (e) => {
     const raw = JSON.parse(await f.text());
     if (raw.app === 'home-planner') { toast('This is a furniture layout. Open it with File → Open layout.', 4000); return; }
     if (!raw.name) raw.name = f.name.replace(/\.json$/i, '').replace(/[_-]+/g, ' ');
-    addHouse(normalizeHouse(raw));
+    const { media, photos, ...geometry } = raw, h = normalizeHouse(geometry);
+    for (const [key, data] of Object.entries(media || {})) if (/^img:[\w-]+$/.test(key) && /^data:image\//.test(data)) await putModel(key, { kind: 'img', blob: dataToBlob(data), name: key });
+    if (photos && typeof photos === 'object') { PHOTOS[h.id] = photos; ls.set(PHOTO_STORE, JSON.stringify(PHOTOS)); }
+    addHouse(h);
+    resolvePlan();
   } catch (err) { toast('This file is not a house. It needs at least walls and a floor.'); }
 };
 $('#hmCancel').onclick = () => { $('#houseModal').hidden = true; };
@@ -3830,6 +3942,1233 @@ function showHouseName() {
   $('#setOverlay').closest('label').hidden = !PLAN;
 }
 showHouseName();
+
+/* ---------- pictures: the floor plan and room photos, kept with the imported models in this browser ---------- */
+const loadImg = (url) => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+const picUrls = new Map();
+async function pictureUrl(key) {
+  if (!key) return null;
+  if (picUrls.has(key)) return picUrls.get(key);
+  const rec = await getModel(key);
+  if (!rec || !rec.blob) return null;
+  const u = URL.createObjectURL(rec.blob);
+  picUrls.set(key, u);
+  return u;
+}
+// large pictures are scaled down to maxSide pixels, and anything a browser may not show again (HEIC, BMP) becomes a JPEG
+async function storePicture(file, maxSide) {
+  const src = URL.createObjectURL(file);
+  let im;
+  try { im = await loadImg(src); } catch (e) { URL.revokeObjectURL(src); return null; }
+  let blob = file, w = im.naturalWidth, h = im.naturalHeight;
+  if (Math.max(w, h) > maxSide || file.size > 5e6 || !/^image\/(png|jpeg|webp|gif)$/.test(file.type)) {
+    const s = Math.min(1, maxSide / Math.max(w, h));
+    w = Math.round(w * s); h = Math.round(h * s);
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, w, h); g.drawImage(im, 0, 0, w, h);
+    blob = await new Promise((res) => c.toBlob(res, 'image/jpeg', 0.88));
+  }
+  URL.revokeObjectURL(src);
+  const key = 'img:' + Date.now().toString(36) + uid();
+  await putModel(key, { kind: 'img', blob, w, h, name: file.name });
+  return { key, w, h };
+}
+async function delModel(key) {
+  memModels.delete(key);
+  if (picUrls.has(key)) { URL.revokeObjectURL(picUrls.get(key)); picUrls.delete(key); }
+  const d = await db(); if (!d) return;
+  try { d.transaction(DB_STORE, 'readwrite').objectStore(DB_STORE).delete(key); } catch (e) { /* already gone */ }
+}
+const blobToData = (blob) => new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => res(null); r.readAsDataURL(blob); });
+function dataToBlob(data) { const [head, body] = data.split(','); return new Blob([unb64(body)], { type: (head.match(/data:([^;]+)/) || [])[1] || 'image/jpeg' }); }
+// a house drawn here keeps its floor plan as a picture key; the picture is looked up when the house is opened
+async function resolvePlan() {
+  const p = PLAN;
+  if (!p || p.url || !p.img) return;
+  const u = await pictureUrl(p.img);
+  if (u && PLAN === p) { p.url = u; buildOverlay(); }
+}
+
+/* ---------- photos of each room ---------- */
+// by house and room; a house that is still being drawn keeps them under '__draft' until it is built
+const PHOTO_STORE = 'home-planner-photos';
+const PHOTOS = (() => { try { return JSON.parse(ls.get(PHOTO_STORE) || '{}') || {}; } catch (e) { return {}; } })();
+const roomPhotos = (hid, rid) => ((PHOTOS[hid] || {})[rid] || []);
+function setRoomPhotos(hid, rid, list) {
+  const h = (PHOTOS[hid] ||= {});
+  if (list.length) h[rid] = list; else delete h[rid];
+  if (!Object.keys(h).length) delete PHOTOS[hid];
+  ls.set(PHOTO_STORE, JSON.stringify(PHOTOS));
+}
+let photoTarget = null;
+function addPhotos(hid, rid, after) { photoTarget = { hid, rid, after }; $('#filePhotos').click(); }
+async function takePhotos(t, files) {
+  files = files.filter((f) => /^image\//.test(f.type) || /\.(jpe?g|png|webp|heic|gif)$/i.test(f.name));
+  if (!files.length) return;
+  toast(files.length > 1 ? `Adding ${files.length} photos…` : 'Adding the photo…', 8000);
+  const keys = [];
+  for (const f of files) { const p = await storePicture(f, 2000); if (p) keys.push(p.key); }
+  setRoomPhotos(t.hid, t.rid, [...roomPhotos(t.hid, t.rid), ...keys]);
+  toast(keys.length ? `${keys.length} photo${keys.length > 1 ? 's' : ''} added.` : 'These pictures could not be read. JPG or PNG works everywhere.', 3500);
+  if (t.after) t.after();
+}
+$('#filePhotos').onchange = (e) => {
+  const files = [...e.target.files]; e.target.value = '';
+  const t = photoTarget; photoTarget = null;
+  if (t && files.length) takePhotos(t, files);
+};
+function roomPhotoStrip(r) {
+  const list = roomPhotos(HOUSE.id, r.id);
+  return `<div class="rph">${list.map((k, i) => `<button class="ph" data-ph="${esc(r.id)}" data-i="${i}" title="Photo ${i + 1} of ${esc(r.name)}"><img alt="" data-key="${esc(k)}"></button>`).join('')}<button class="add${list.length ? ' sq' : ''}" data-addph="${esc(r.id)}" title="Add photos of ${esc(r.name)}">${list.length ? '+' : '+ Photos'}</button></div>`;
+}
+function fillThumbs(root) {
+  $$('img[data-key]', root).forEach(async (im) => { const u = await pictureUrl(im.dataset.key); if (u) im.src = u; else im.closest('button').classList.add('missing'); });
+}
+function wireRoomPhotos() {
+  const name = (id) => (HOUSE.rooms.find((r) => r.id === id) || { name: 'Room' }).name;
+  $$('#roomList [data-ph]').forEach((b) => (b.onclick = () => openPhotos(HOUSE.id, b.dataset.ph, +b.dataset.i, name(b.dataset.ph))));
+  $$('#roomList [data-addph]').forEach((b) => (b.onclick = () => addPhotos(HOUSE.id, b.dataset.addph, renderRooms)));
+  fillThumbs($('#roomList'));
+}
+let pbox = null;
+function openPhotos(hid, rid, i, name) { pbox = { hid, rid, i, name }; $('#photoBox').hidden = false; showPhoto(); }
+async function showPhoto() {
+  if (!pbox) return;
+  const list = roomPhotos(pbox.hid, pbox.rid);
+  if (!list.length) { closePhotos(); return; }
+  pbox.i = (pbox.i + list.length) % list.length;
+  $('#pbCap').textContent = `${pbox.name} · ${pbox.i + 1} of ${list.length}`;
+  const want = list[pbox.i], u = await pictureUrl(want);
+  if (!pbox || roomPhotos(pbox.hid, pbox.rid)[pbox.i] !== want) return;
+  $('#pbImg').src = u || ''; $('#pbImg').alt = u ? `Photo of ${pbox.name}` : 'This photo is not in this browser';
+  $('#pbPrev').disabled = $('#pbNext').disabled = list.length < 2;
+  $('#pbDel').textContent = 'Remove'; $('#pbDel').classList.remove('sure');
+}
+function closePhotos() { $('#photoBox').hidden = true; pbox = null; $('#pbImg').removeAttribute('src'); }
+$('#pbPrev').onclick = () => { pbox.i--; showPhoto(); };
+$('#pbNext').onclick = () => { pbox.i++; showPhoto(); };
+$('#pbClose').onclick = closePhotos;
+$('#photoBox').onclick = (e) => { if (e.target.id === 'photoBox') closePhotos(); };
+$('#pbDel').onclick = () => {
+  const b = $('#pbDel');
+  // the first click asks, the second removes
+  if (!b.classList.contains('sure')) { b.classList.add('sure'); b.textContent = 'Remove this photo?'; return; }
+  const list = roomPhotos(pbox.hid, pbox.rid).slice(), [key] = list.splice(pbox.i, 1);
+  setRoomPhotos(pbox.hid, pbox.rid, list); delModel(key);
+  renderRooms(); if (BLD.open) bPanel();
+  showPhoto();
+};
+// a removed house takes its photos and floor plan picture with it, unless another house or a drawing still uses them
+function forgetHouse(id, h) {
+  const keys = new Set(Object.values(PHOTOS[id] || {}).flat());
+  if (h && h.plan && h.plan.img) keys.add(h.plan.img);
+  delete PHOTOS[id]; ls.set(PHOTO_STORE, JSON.stringify(PHOTOS));
+  dropDrawing(id);
+  const fresh = loadDrawing(null);
+  for (const k of keys) if (!Object.values(myHouses).some((o) => o.plan && o.plan.img === k) && !(fresh && fresh.img === k)) delModel(k);
+}
+
+/* ---------- drawing a house from its floor plan ---------- */
+// The drawing is kept in the picture's own pixels, so it stays on the plan when the scale is corrected; the scale turns it into metres when the house is built.
+// Walls are drawn along their middle, openings sit at a distance from the wall's start, and a room is a point inside it, filled out to the walls around it.
+const DRAFT_STORE = 'home-planner-draft';
+const OP_TYPES = { door: ['Door', 0.83], double: ['Double door', 1.4], glass: ['Glass door', 1.6], window: ['Window', 1.2], gap: ['Opening', 0.9] };
+const ROOM_NAMES = ['Living room', 'Kitchen', 'Bedroom', 'Bathroom', 'Toilet', 'Hall', 'Storage', 'Study', 'Dining room', 'Laundry', 'Balcony'];
+const FLOOR_NAMES = { oak: 'Oak', greyoak: 'Grey oak', tile: 'Tiles', concrete: 'Concrete', mosaic: 'Small tiles' };
+const wetRoom = (n) => /bath|toilet|wc|laundry|shower|bad|douche|was/i.test(n);
+const ROOM_TINTS = [tok('plan-room', '#f1d8b2'), tok('plan-wet', '#d5e2ee'), '#dfe8d3', '#efd5d2', '#e3dcef', '#f3e6bf', '#d3e8e6'];
+function newDrawing() { return { v: 1, id: null, name: 'My house', img: null, iw: 0, ih: 0, grid: false, scale: null, walls: [], ops: [], rooms: [], t: 0.1, op: 'door', ceiling: 2.6, doorH: 2.3, sill: 0.85, winTop: 2.3 }; }
+let DRAW = null;
+const BLD = { open: false, step: 'plan', tool: 'draw', k: 1, ox: 0, oy: 0, img: null, imgKey: null, chain: null, cur: null, guides: [], sel: null, hover: null, drag: null, down: null, pan: null, pinch: null, ptrs: new Map(), undo: [], redo: [], last: '', ver: 0, cache: null, typed: '', space: false, raf: 0, sc: null, opNew: null, closed: false };
+const memDraft = new Map();
+const draftKey = (id) => DRAFT_STORE + (id ? ':' + id : '');
+function saveDrawing() { const s = JSON.stringify(DRAW); memDraft.set(draftKey(DRAW.id), s); ls.set(draftKey(DRAW.id), s); }
+function loadDrawing(id) { const raw = ls.get(draftKey(id)) ?? memDraft.get(draftKey(id)); try { return raw ? JSON.parse(raw) : null; } catch (e) { return null; } }
+function dropDrawing(id) { memDraft.delete(draftKey(id)); try { localStorage.removeItem(draftKey(id)); } catch (e) { /* storage blocked */ } }
+const bPhotos = (rid) => roomPhotos(DRAW.id || '__draft', rid);
+
+// geometry on the picture, in pixels
+const bDist = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1]);
+const bSame = (p, q) => Math.abs(p[0] - q[0]) < 1e-6 && Math.abs(p[1] - q[1]) < 1e-6;
+const r1 = (v) => Math.round(v * 10) / 10;
+const r3 = (v) => Math.round(v * 1000) / 1000;
+function bProj(p, a, b) { const dx = b[0] - a[0], dy = b[1] - a[1], L2 = dx * dx + dy * dy || 1e-12, t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L2; return { t, q: [a[0] + dx * t, a[1] + dy * t], L: Math.sqrt(L2) }; }
+function bSegDist(p, a, b) { const t = clamp(bProj(p, a, b).t, 0, 1); return Math.hypot(p[0] - a[0] - (b[0] - a[0]) * t, p[1] - a[1] - (b[1] - a[1]) * t); }
+const bPpm = () => { const s = DRAW && DRAW.scale; return s && s.b && s.cm > 0 ? bDist(s.a, s.b) / (s.cm / 100) : 0; };
+const bCm = (px) => Math.round((px / (bPpm() || 1)) * 100);
+// a wall drawn within 1.2 cm of level or upright is taken as exactly level or upright
+function bAxis(w) { const tol = Math.max(0.5, 0.012 * bPpm()), dx = Math.abs(w.a[0] - w.b[0]), dy = Math.abs(w.a[1] - w.b[1]); return dy <= tol && dx > dy ? 'x' : dx <= tol && dy > dx ? 'z' : null; }
+// the side a door opens to is +1 or -1 along this normal, the same one the planner's walls use
+function bNormal(w) { const ax = bAxis(w); if (ax === 'x') return [0, 1]; if (ax === 'z') return [1, 0]; const L = bDist(w.a, w.b) || 1; return [(w.b[1] - w.a[1]) / L, -(w.b[0] - w.a[0]) / L]; }
+const bDir = (w) => { const L = bDist(w.a, w.b) || 1; return [(w.b[0] - w.a[0]) / L, (w.b[1] - w.a[1]) / L]; };
+const bAt = (w, s) => { const u = bDir(w); return [w.a[0] + u[0] * s, w.a[1] + u[1] * s]; };
+const wallOf = (id) => DRAW.walls.find((w) => w.id === id);
+// a wall end that meets no other wall: the walls do not close there
+const bFreeEnd = (p, self) => !DRAW.walls.some((o) => o !== self && (bSame(o.a, p) || bSame(o.b, p) || bSegDist(p, o.a, o.b) < 0.75));
+function bFreeEnds() { const out = []; for (const w of DRAW.walls) for (const p of [w.a, w.b]) if (bFreeEnd(p, w) && !out.some((q) => bSame(p, q))) out.push(p); return out; }
+function bNodeNear(p, tol) { let best = null, bd = tol; for (const w of DRAW.walls) for (const q of [w.a, w.b]) { const d = bDist(p, q); if (d < bd) { bd = d; best = q; } } return best; }
+function bNearest(list, v, tol) { let best = v, bd = tol; for (const x of list) { const d = Math.abs(x - v); if (d < bd) { bd = d; best = x; } } return best; }
+function bIntersect(o, dir, a, b) {
+  const ex = b[0] - a[0], ez = b[1] - a[1], den = dir[0] * ez - dir[1] * ex;
+  if (Math.abs(den) < 1e-9) return null;
+  const t = ((a[0] - o[0]) * ez - (a[1] - o[1]) * ex) / den, s = ((a[0] - o[0]) * dir[1] - (a[1] - o[1]) * dir[0]) / den;
+  return s < -0.02 || s > 1.02 ? null : [o[0] + dir[0] * t, o[1] + dir[1] * t];
+}
+function bAxisSnap(a, p) { const dx = p[0] - a[0], dy = p[1] - a[1]; if (Math.abs(dy) < Math.abs(dx) * 0.14) return [p[0], a[1]]; if (Math.abs(dx) < Math.abs(dy) * 0.14) return [a[0], p[1]]; return p; }
+
+/* the drawing in metres: walls, which side of each is outside, the floor and every room's outline, found on a 2 cm raster */
+function bFlood(G, s, ok, mark) {
+  const N = G.W * G.H, st = new Int32Array(N);
+  let top = 0;
+  mark(s); st[top++] = s;
+  while (top) {
+    const i = st[--top], cx = i % G.W;
+    if (cx > 0 && ok(i - 1)) { mark(i - 1); st[top++] = i - 1; }
+    if (cx < G.W - 1 && ok(i + 1)) { mark(i + 1); st[top++] = i + 1; }
+    if (i >= G.W && ok(i - G.W)) { mark(i - G.W); st[top++] = i - G.W; }
+    if (i + G.W < N && ok(i + G.W)) { mark(i + G.W); st[top++] = i + G.W; }
+  }
+}
+// a wall is a band of its thickness, made a cell wider on the raster so walls that just meet leave no gap
+function bRasterWall(G, x, val) {
+  const c = G.cell, ht = Math.max(x.t / 2, c * 0.5) + c * 0.5, M = [(x.P[0] + x.Q[0]) / 2, (x.P[1] + x.Q[1]) / 2], hl = bDist(x.P, x.Q) / 2 + c * 0.5, u = x.u, n = [-u[1], u[0]];
+  const ex = Math.abs(u[0]) * hl + Math.abs(n[0]) * ht, ez = Math.abs(u[1]) * hl + Math.abs(n[1]) * ht;
+  const cx0 = Math.max(0, Math.floor((M[0] - ex - G.x0) / c)), cx1 = Math.min(G.W - 1, Math.ceil((M[0] + ex - G.x0) / c));
+  const cz0 = Math.max(0, Math.floor((M[1] - ez - G.z0) / c)), cz1 = Math.min(G.H - 1, Math.ceil((M[1] + ez - G.z0) / c));
+  for (let cz = cz0; cz <= cz1; cz++) for (let cx = cx0; cx <= cx1; cx++) {
+    const px = G.x0 + (cx + 0.5) * c - M[0], pz = G.z0 + (cz + 0.5) * c - M[1], i = cz * G.W + cx;
+    if (Math.abs(px * u[0] + pz * u[1]) <= hl && Math.abs(px * n[0] + pz * n[1]) <= ht && G.wall[i] < val) G.wall[i] = val;
+  }
+}
+function bDP(pts, eps) {
+  if (pts.length < 3) return pts;
+  let idx = 0, md = 0;
+  for (let i = 1; i < pts.length - 1; i++) { const d = bSegDist(pts[i], pts[0], pts[pts.length - 1]); if (d > md) { md = d; idx = i; } }
+  if (md <= eps) return [pts[0], pts[pts.length - 1]];
+  return bDP(pts.slice(0, idx + 1), eps).slice(0, -1).concat(bDP(pts.slice(idx), eps));
+}
+function bClean(pts) {
+  for (let pass = 0; pass < 3; pass++) {
+    pts = pts.filter((p, i) => bDist(p, pts[(i + pts.length - 1) % pts.length]) > 0.005);
+    pts = pts.filter((p, i) => {
+      const a = pts[(i + pts.length - 1) % pts.length], b = pts[(i + 1) % pts.length];
+      return Math.abs((p[0] - a[0]) * (b[1] - a[1]) - (p[1] - a[1]) * (b[0] - a[0])) > 1e-5 * (bDist(a, b) + 1e-9);
+    });
+  }
+  return pts;
+}
+// the outline of the cells for which inside() holds, in metres: traced along the cell edges, straightened, and laid onto the wall faces
+function bOutline(G, inside, bb, snap) {
+  const [bx0, bz0, bx1, bz1] = bb, VW = G.W + 1, nx = new Map();
+  const isIn = (cx, cz) => cx >= bx0 && cz >= bz0 && cx <= bx1 && cz <= bz1 && inside(cx, cz);
+  const add = (a, b) => { const l = nx.get(a); if (l) l.push(b); else nx.set(a, [b]); };
+  for (let cz = bz0; cz <= bz1; cz++) for (let cx = bx0; cx <= bx1; cx++) {
+    if (!isIn(cx, cz)) continue;
+    const v = cz * VW + cx;
+    if (!isIn(cx, cz - 1)) add(v, v + 1);
+    if (!isIn(cx + 1, cz)) add(v + 1, v + 1 + VW);
+    if (!isIn(cx, cz + 1)) add(v + 1 + VW, v + VW);
+    if (!isIn(cx - 1, cz)) add(v + VW, v);
+  }
+  const dirOf = (a, b) => (b - a === 1 ? 0 : b - a === VW ? 1 : b - a === -1 ? 2 : 3);
+  let best = null, bestA = 0;
+  while (nx.size) {
+    const s = nx.keys().next().value, loop = [];
+    let v = s, dir = -1;
+    for (let guard = 0; guard < 4e6; guard++) {
+      const l = nx.get(v); if (!l) break;
+      let pick = 0;
+      // where two cells touch at a corner, turn right so each keeps its own outline
+      if (l.length > 1 && dir >= 0) { let rank = 9; l.forEach((t, j) => { const r = [(dir + 1) % 4, dir, (dir + 3) % 4].indexOf(dirOf(v, t)); if (r >= 0 && r < rank) { rank = r; pick = j; } }); }
+      const t = l.splice(pick, 1)[0];
+      if (!l.length) nx.delete(v);
+      const d = dirOf(v, t);
+      if (d !== dir) loop.push([v % VW, (v / VW) | 0]);
+      dir = d; v = t;
+      if (v === s) break;
+    }
+    let a = 0;
+    for (let i = 0; i < loop.length; i++) { const p = loop[i], q = loop[(i + 1) % loop.length]; a += p[0] * q[1] - q[0] * p[1]; }
+    if (a > bestA) { bestA = a; best = loop; }
+  }
+  if (!best || best.length < 4) return null;
+  const pts = bClean(bDP([...best, best[0]], 1.3).slice(0, -1).map(([cx, cz]) => snap([G.x0 + cx * G.cell, G.z0 + cz * G.cell])));
+  return pts.length >= 3 ? pts.map(([x, z]) => [r3(x), r3(z)]) : null;
+}
+// the spot furthest from the walls: where the room's name goes and where walking in it starts
+function bPole(G, inside, bb) {
+  const w = bb[2] - bb[0] + 1, h = bb[3] - bb[1] + 1, d = new Float32Array(w * h), D = Math.SQRT2;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) d[y * w + x] = inside(bb[0] + x, bb[1] + y) ? 1e9 : 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = y * w + x; if (!d[i]) continue;
+    d[i] = Math.min(d[i], x ? d[i - 1] + 1 : 1, y ? d[i - w] + 1 : 1, x && y ? d[i - w - 1] + D : D, y && x < w - 1 ? d[i - w + 1] + D : D);
+  }
+  let bi = 0, bv = -1;
+  for (let y = h - 1; y >= 0; y--) for (let x = w - 1; x >= 0; x--) {
+    const i = y * w + x; if (!d[i]) continue;
+    d[i] = Math.min(d[i], x < w - 1 ? d[i + 1] + 1 : 1, y < h - 1 ? d[i + w] + 1 : 1, x < w - 1 && y < h - 1 ? d[i + w + 1] + D : D, y < h - 1 && x ? d[i + w - 1] + D : D);
+    if (d[i] > bv) { bv = d[i]; bi = i; }
+  }
+  return [G.x0 + (bb[0] + (bi % w) + 0.5) * G.cell, G.z0 + (bb[1] + ((bi / w) | 0) + 0.5) * G.cell];
+}
+function bFarthest(G, inside, bb, p) {
+  let best = p, bd = 0;
+  for (let cz = bb[1]; cz <= bb[3]; cz += 2) for (let cx = bb[0]; cx <= bb[2]; cx += 2) {
+    if (!inside(cx, cz)) continue;
+    const q = [G.x0 + (cx + 0.5) * G.cell, G.z0 + (cz + 0.5) * G.cell], d = bDist(p, q);
+    if (d > bd) { bd = d; best = q; }
+  }
+  return best;
+}
+function bAnalyse() {
+  if (BLD.cache && BLD.cache.ver === BLD.ver) return BLD.cache;
+  const k = bPpm(), A = { ver: BLD.ver, k, walls: [], rooms: new Map(), base: null, G: null, err: null };
+  BLD.cache = A;
+  if (!k) { A.err = 'scale'; return A; }
+  const W = DRAW.walls.map((w) => {
+    const P = [w.a[0] / k, w.a[1] / k], Q = [w.b[0] / k, w.b[1] / k], ax = bAxis(w);
+    if (ax === 'x') P[1] = Q[1] = (P[1] + Q[1]) / 2;
+    if (ax === 'z') P[0] = Q[0] = (P[0] + Q[0]) / 2;
+    const L = bDist(P, Q);
+    return { w, id: w.id, ax, A: P, B: Q, L, u: [(Q[0] - P[0]) / (L || 1), (Q[1] - P[1]) / (L || 1)], t: w.line ? 0 : w.t, line: !!w.line };
+  }).filter((x) => x.L > 0.01);
+  A.walls = W;
+  if (!W.some((x) => !x.line)) { A.err = 'walls'; return A; }
+  const near = (p, q) => bDist(p, q) < 0.02;
+  for (const x of W) {
+    x.n = x.ax === 'x' ? [0, 1] : x.ax === 'z' ? [1, 0] : [x.u[1], -x.u[0]];
+    x.adj = [0, 0];
+    // where two walls meet square, the level one runs through the corner and the upright one stops at its face
+    if (!x.line) [x.A, x.B].forEach((E, i) => {
+      let ext = 0, trim = 0, touch = false;
+      for (const o of W) {
+        if (o === x || o.line) continue;
+        const atEnd = near(o.A, E) || near(o.B, E), r = bProj(E, o.A, o.B), body = !atEnd && r.t > 0 && r.t < 1 && bDist(E, r.q) < 0.02;
+        if (!atEnd && !body) continue;
+        touch = true;
+        if (!x.ax || !o.ax || x.ax === o.ax) continue;
+        if (body || x.ax === 'z') trim = Math.max(trim, o.t / 2); else ext = Math.max(ext, o.t / 2);
+      }
+      x.adj[i] = trim ? -trim : !x.ax && touch ? x.t / 2 : ext;
+    });
+    x.P = [x.A[0] - x.u[0] * x.adj[0], x.A[1] - x.u[1] * x.adj[0]];
+    x.Q = [x.B[0] + x.u[0] * x.adj[1], x.B[1] + x.u[1] * x.adj[1]];
+    x.skip = !x.line && (x.Q[0] - x.P[0]) * x.u[0] + (x.Q[1] - x.P[1]) * x.u[1] < 0.005; // a stub that lies wholly inside the walls it joins
+    if (x.ax) {
+      const lo = (i) => Math.min(x.P[i], x.Q[i]), hi = (i) => Math.max(x.P[i], x.Q[i]);
+      x.box = x.ax === 'x' ? { x0: lo(0), x1: hi(0), z0: x.A[1] - x.t / 2, z1: x.A[1] + x.t / 2 } : { x0: x.A[0] - x.t / 2, x1: x.A[0] + x.t / 2, z0: lo(1), z1: hi(1) };
+    }
+  }
+  let x0 = Infinity, z0 = Infinity, x1 = -Infinity, z1 = -Infinity;
+  for (const x of W) for (const p of [x.P, x.Q]) { x0 = Math.min(x0, p[0]); z0 = Math.min(z0, p[1]); x1 = Math.max(x1, p[0]); z1 = Math.max(z1, p[1]); }
+  const pad = 0.5 + Math.max(...W.map((x) => x.t));
+  x0 -= pad; z0 -= pad; x1 += pad; z1 += pad;
+  const cell = Math.max(0.02, Math.sqrt(((x1 - x0) * (z1 - z0)) / 1.5e6));
+  const G = { x0, z0, cell, W: Math.ceil((x1 - x0) / cell), H: Math.ceil((z1 - z0) / cell) }, N = G.W * G.H;
+  G.wall = new Uint8Array(N); G.out = new Uint8Array(N); G.room = new Int16Array(N).fill(-1);
+  G.at = (x, z) => { const cx = Math.floor((x - G.x0) / cell), cz = Math.floor((z - G.z0) / cell); return cx < 0 || cz < 0 || cx >= G.W || cz >= G.H ? -1 : cz * G.W + cx; };
+  A.G = G;
+  for (const x of W) bRasterWall(G, x, 1);
+  // outside is everything reached from the edge without crossing a wall; doors and windows count as wall here
+  bFlood(G, 0, (j) => !G.wall[j] && !G.out[j], (j) => { G.out[j] = 1; });
+  let inner = 0;
+  for (let j = 0; j < N; j++) if (!G.out[j] && !G.wall[j]) inner++;
+  if (!inner) { A.err = 'open'; return A; }
+  const isOut = (x, z) => { const j = G.at(x, z); return j < 0 || G.out[j] === 1; };
+  for (const x of W) {
+    x.ext = 0;
+    if (x.line) continue;
+    let plus = 0, minus = 0;
+    for (const f of [0.2, 0.5, 0.8]) {
+      const m = [x.A[0] + (x.B[0] - x.A[0]) * f, x.A[1] + (x.B[1] - x.A[1]) * f], o = x.t / 2 + 0.1;
+      if (isOut(m[0] + x.n[0] * o, m[1] + x.n[1] * o)) plus++;
+      if (isOut(m[0] - x.n[0] * o, m[1] - x.n[1] * o)) minus++;
+    }
+    x.ext = plus >= 2 && minus < 2 ? 1 : minus >= 2 && plus < 2 ? -1 : 0;
+    if (x.ext) bRasterWall(G, x, 2);
+  }
+  const fx = [], fz = [];
+  for (const x of W) if (x.box && !x.skip) { fx.push(x.box.x0, x.box.x1); fz.push(x.box.z0, x.box.z1); }
+  const snap = (p) => [bNearest(fx, p[0], cell * 2.6), bNearest(fz, p[1], cell * 2.6)];
+  DRAW.rooms.forEach((r, idx) => {
+    const res = { err: null };
+    A.rooms.set(r.id, res);
+    let j = G.at(r.seed[0] / k, r.seed[1] / k);
+    if (j >= 0 && G.wall[j]) {
+      // a point dropped on a wall: the nearest free cell
+      const cx = j % G.W, cz = (j / G.W) | 0; j = -1;
+      for (let rr = 1; rr < 6 && j < 0; rr++) for (let dz = -rr; dz <= rr && j < 0; dz++) for (let dx = -rr; dx <= rr; dx++) { const q = (cz + dz) * G.W + cx + dx; if (q >= 0 && q < N && !G.wall[q]) { j = q; break; } }
+    }
+    if (j < 0 || G.out[j]) { res.err = 'open'; return; }
+    if (G.room[j] >= 0) { res.err = 'same'; res.other = DRAW.rooms[G.room[j]].id; return; }
+    const bb = [G.W, G.H, 0, 0];
+    let n = 0;
+    bFlood(G, j, (i) => !G.wall[i] && G.room[i] < 0, (i) => { G.room[i] = idx; n++; const cx = i % G.W, cz = (i / G.W) | 0; if (cx < bb[0]) bb[0] = cx; if (cz < bb[1]) bb[1] = cz; if (cx > bb[2]) bb[2] = cx; if (cz > bb[3]) bb[3] = cz; });
+    const inside = (cx, cz) => G.room[cz * G.W + cx] === idx;
+    res.pts = bOutline(G, inside, bb, snap);
+    res.area = res.pts ? polyArea(res.pts) : n * cell * cell;
+    res.label = bPole(G, inside, bb);
+    res.far = bFarthest(G, inside, bb, res.label);
+    res.bb = [G.x0 + bb[0] * cell, G.z0 + bb[1] * cell, G.x0 + (bb[2] + 1) * cell, G.z0 + (bb[3] + 1) * cell];
+  });
+  // the floor: everything inside the outside walls, under the inside walls too
+  A.base = bOutline(G, (cx, cz) => { const j = cz * G.W + cx; return !G.out[j] && G.wall[j] !== 2; }, [0, 0, G.W - 1, G.H - 1], snap);
+  if (!A.base) A.err = 'open';
+  return A;
+}
+
+/* the house the planner builds from the drawing */
+function bOpening(o, x, OX, OZ) {
+  const k = bPpm(), s0 = Math.min(o.p0, o.p1) / k, s1 = Math.max(o.p0, o.p1) / k;
+  let a, b, flip = false;
+  if (x.ax) {
+    const i = x.ax === 'x' ? 0 : 1, sg = Math.sign(x.B[i] - x.A[i]) || 1, base = x.A[i] - (i ? OZ : OX);
+    a = base + sg * s0; b = base + sg * s1; flip = sg < 0;
+    if (a > b) [a, b] = [b, a];
+  } else { a = s0 + x.adj[0]; b = s1 + x.adj[0]; }
+  const out = { a: r3(a), b: r3(b) };
+  if (o.t === 'window') { out.t = 'window'; if (o.y0 != null) out.y0 = o.y0; if (o.y1 != null) out.y1 = o.y1; return out; }
+  if (o.h != null) out.h = o.h;
+  if (o.t === 'gap') { out.t = 'gap'; return out; }
+  out.t = 'door'; out.swing = o.swing || 1;
+  if (o.t === 'double' || (o.t === 'glass' && b - a > 1.2)) out.leaves = 2; else out.hinge = (o.hinge === 1) !== flip ? 'b' : 'a';
+  if (o.t === 'glass') out.glazed = true;
+  if (o.front) out.front = true;
+  return out;
+}
+function bHouse() {
+  const A = bAnalyse();
+  if (A.err || !A.base) return null;
+  const OX = Math.min(...A.base.map((p) => p[0])), OZ = Math.min(...A.base.map((p) => p[1]));
+  const sh = (p) => [r3(p[0] - OX), r3(p[1] - OZ)];
+  const rooms = [];
+  for (const r of DRAW.rooms) {
+    const res = A.rooms.get(r.id); if (!res || !res.pts) continue;
+    const L = sh(res.label), wd = res.bb[2] - res.bb[0], dp = res.bb[3] - res.bb[1];
+    rooms.push({ id: r.id, name: (r.name || '').trim() || 'Room', label: L, pts: res.pts.map(sh), walk: { p: L, look: sh(res.far) }, focus: L, r: r3(Math.max(2.5, Math.max(wd, dp) * 0.7 + 1)), mat: r.mat || 'oak' });
+  }
+  const byMat = {};
+  for (const r of rooms) byMat[r.mat] = (byMat[r.mat] || 0) + polyArea(r.pts);
+  const baseMat = Object.keys(byMat).sort((p, q) => byMat[q] - byMat[p])[0] || 'oak';
+  const floors = [{ id: 'base', mat: baseMat, pts: A.base.map(sh) }];
+  for (const r of rooms) { if (r.mat !== baseMat) floors.push({ id: 'f-' + r.id, mat: r.mat, pts: r.pts }); delete r.mat; }
+  const walls = [], diag = [];
+  for (const x of A.walls) {
+    if (x.line || x.skip) continue;
+    const open = DRAW.ops.filter((o) => o.wall === x.id).sort((p, q) => p.p0 - q.p0).map((o) => bOpening(o, x, OX, OZ));
+    if (x.box) {
+      const b = x.box, W = { id: x.id, x0: r3(b.x0 - OX), x1: r3(b.x1 - OX), z0: r3(b.z0 - OZ), z1: r3(b.z1 - OZ) };
+      if (x.ext) W.ext = x.ax === 'x' ? [0, x.ext] : [x.ext, 0];
+      if (x.w.h) W.h = x.w.h;
+      if (open.length) W.open = open;
+      walls.push(W);
+    } else {
+      const D = { id: x.id, a: sh(x.P), b: sh(x.Q), t: x.t };
+      if (x.w.h) D.h = x.w.h;
+      if (open.length) D.open = open;
+      diag.push(D);
+    }
+  }
+  // each wall face is cut where the room behind it changes, so it can be painted per room
+  const roomAt = (x, z) => { for (const r of rooms) if (pointInPoly(x, z, r.pts)) return r.id; return null; };
+  for (const W of walls) {
+    const axisX = W.x1 - W.x0 >= W.z1 - W.z0, lo = axisX ? W.x0 : W.z0, hi = axisX ? W.x1 : W.z1, cuts = new Set();
+    for (const off of axisX ? [W.z0 - 0.06, W.z1 + 0.06] : [W.x0 - 0.06, W.x1 + 0.06]) {
+      let last = null, lastS = 0;
+      for (let s = lo + 0.01; s < hi; s += 0.02) {
+        const id = axisX ? roomAt(s, off) : roomAt(off, s);
+        if (!id) continue;
+        if (last && id !== last) cuts.add(r3((lastS + s) / 2));
+        last = id; lastS = s;
+      }
+    }
+    const list = [...cuts].filter((c) => c > lo + 0.02 && c < hi - 0.02).sort((p, q) => p - q);
+    if (list.length) W.split = list;
+  }
+  const total = rooms.reduce((s, r) => s + polyArea(r.pts), 0) || polyArea(floors[0].pts);
+  const k = A.k, id = DRAW.id || houseSlug(DRAW.name || 'house');
+  const h = {
+    id, name: (DRAW.name || '').trim() || 'My house', sub: `≈ ${Math.round(total)} m² · drawn from its floor plan`, note: 'Drawn from its floor plan in this planner; areas are inside the walls as they were traced.',
+    ceiling: DRAW.ceiling, doorH: DRAW.doorH, sill: DRAW.sill, winTop: DRAW.winTop, ground: -0.3,
+    walls, diag, fixtures: [], floors, rooms: rooms.length ? rooms : [{ id: 'home', name: 'Home', pts: floors[0].pts }],
+    draft: JSON.parse(JSON.stringify({ ...DRAW, id })),
+  };
+  if (DRAW.img) h.plan = { img: DRAW.img, x0: r3(-OX), z0: r3(-OZ), x1: r3(DRAW.iw / k - OX), z1: r3(DRAW.ih / k - OZ) };
+  return normalizeHouse(h);
+}
+function bProblems() {
+  const A = bAnalyse(), out = [], nm = (id) => (DRAW.rooms.find((r) => r.id === id) || { name: 'another room' }).name;
+  if (!bPpm()) out.push({ block: true, text: 'Set the scale first (step 2).' });
+  else if (!DRAW.walls.some((w) => !w.line)) out.push({ block: true, text: 'Draw the walls first (step 3).' });
+  else if (A.err === 'open') out.push({ block: true, text: 'The outside walls do not make a closed shape yet. The red dots are wall ends that meet nothing.' });
+  if (A.err) return out;
+  for (const r of DRAW.rooms) {
+    const res = A.rooms.get(r.id);
+    if (res && res.err === 'open') out.push({ text: `${r.name} has no walls all around it, so it is left out.` });
+    if (res && res.err === 'same') out.push({ text: `${r.name} lies within the same walls as ${nm(res.other)}, so it is left out.` });
+  }
+  if (!DRAW.rooms.length) out.push({ text: 'No rooms yet, so the whole house becomes one room. Fill the rooms in step 5 to walk to them and paint them one by one.' });
+  const free = bFreeEnds().length;
+  if (free) out.push({ text: `${free} wall end${free > 1 ? 's meet' : ' meets'} nothing (red dots). That is right for a wall that stands free; otherwise join ${free > 1 ? 'them' : 'it'} to a wall.` });
+  if (!DRAW.ops.some((o) => o.t !== 'window')) out.push({ text: 'There is no door yet (step 4).' });
+  return out;
+}
+function bBuild() {
+  const block = bProblems().find((p) => p.block);
+  if (block) { toast(block.text, 4000); return; }
+  const h = bHouse();
+  if (!h) { toast('The house could not be made from this drawing.'); return; }
+  if (!DRAW.id && PHOTOS.__draft) {
+    // the photos added while drawing go with the new house
+    PHOTOS[h.id] = { ...(PHOTOS[h.id] || {}), ...PHOTOS.__draft };
+    delete PHOTOS.__draft; ls.set(PHOTO_STORE, JSON.stringify(PHOTOS));
+  }
+  dropDrawing(DRAW.id);
+  DRAW.id = h.id;
+  bClose(true);
+  addHouse(h);
+  resolvePlan();
+}
+
+/* ---------- the builder's screen ---------- */
+const bcv = $('#bCanvas');
+async function openBuilder(edit) {
+  closeMenus(); cancelTool(); select(null);
+  if (selDoor) selectDoor(null);
+  DRAW = edit ? loadDrawing(HOUSE.id) || JSON.parse(JSON.stringify(HOUSE.draft)) : loadDrawing(null) || newDrawing();
+  if (edit) DRAW.id = HOUSE.id;
+  Object.assign(BLD, { open: true, undo: [], redo: [], last: JSON.stringify(DRAW), sel: null, chain: null, sc: null, typed: '', drag: null, pan: null, opNew: null });
+  BLD.ver++;
+  BLD.closed = !bAnalyse().err;
+  BLD.step = !DRAW.img && !DRAW.grid ? 'plan' : !bPpm() ? 'scale' : 'walls';
+  BLD.tool = DRAW.walls.length ? 'select' : 'draw';
+  $('#builder').hidden = false;
+  $('#bSub').textContent = edit ? HOUSE.name : 'from its floor plan';
+  await bLoadImage();
+  bFit(); bPanel(); bRender(); bHintSet(); bUndoState();
+  bcv.focus({ preventScroll: true });
+}
+function bClose(built) {
+  BLD.open = false; BLD.chain = null; BLD.img = null;
+  $('#builder').hidden = true;
+  if (!built && BLD.undo.length) toast('Your drawing is kept in this browser. Continue it from the house menu.', 3500);
+  renderRooms(); invalidate();
+}
+async function bLoadImage() {
+  BLD.imgKey = DRAW.img; BLD.img = null;
+  if (!DRAW.img) return;
+  const u = await pictureUrl(DRAW.img);
+  if (!u) { toast('The floor plan picture is not in this browser. Choose it again in step 1; the drawing stays.', 5000); return; }
+  try { BLD.img = await loadImg(u); } catch (e) { BLD.img = null; }
+  bRender();
+}
+// the picture fits the space beside the panel
+function bFit() {
+  const cw = bcv.clientWidth, ch = bcv.clientHeight, narrow = window.innerWidth <= 860, side = narrow ? 0 : 324, top = 64;
+  const iw = DRAW.iw || 1000, ih = DRAW.ih || 750, aw = Math.max(80, cw - side - 32), ah = Math.max(80, (narrow ? ch * 0.54 : ch) - top - 32);
+  BLD.k = Math.min(aw / iw, ah / ih);
+  BLD.ox = side + 16 + (aw - iw * BLD.k) / 2; BLD.oy = top + 16 + (ah - ih * BLD.k) / 2;
+}
+function bZoomAt(m, f) {
+  const k = clamp(BLD.k * f, 0.02, 60), r = k / BLD.k;
+  BLD.ox = m[0] - (m[0] - BLD.ox) * r; BLD.oy = m[1] - (m[1] - BLD.oy) * r; BLD.k = k;
+  bRender();
+}
+function bChange() {
+  const s = JSON.stringify(DRAW);
+  if (s !== BLD.last) { BLD.undo.push(BLD.last); if (BLD.undo.length > 150) BLD.undo.shift(); BLD.redo = []; BLD.last = s; }
+  BLD.ver++;
+  saveDrawing();
+  const closed = !bAnalyse().err;
+  if (closed && !BLD.closed && BLD.step === 'walls') toast('The outside walls are closed.', 2200);
+  BLD.closed = closed;
+  bPanel(); bRender(); bUndoState(); bHintSet();
+}
+async function bHistory(from, to) {
+  if (!from.length) return;
+  to.push(BLD.last); BLD.last = from.pop(); DRAW = JSON.parse(BLD.last);
+  BLD.sel = null; BLD.chain = null; BLD.sc = null; BLD.ver++;
+  saveDrawing();
+  if (DRAW.img !== BLD.imgKey) await bLoadImage();
+  bPanel(); bRender(); bUndoState(); bHintSet();
+}
+const bUndo = () => bHistory(BLD.undo, BLD.redo), bRedo = () => bHistory(BLD.redo, BLD.undo);
+function bUndoState() { $('#bUndo').disabled = !BLD.undo.length; $('#bRedo').disabled = !BLD.redo.length; }
+function bCan(s) { return s === 'plan' || (s === 'scale' ? !!DRAW.img : s === 'walls' ? bPpm() > 0 : DRAW.walls.length > 0 && bPpm() > 0); }
+function bDone(s) { const A = bAnalyse(); return s === 'plan' ? !!(DRAW.img || DRAW.grid) : s === 'scale' ? bPpm() > 0 : s === 'walls' ? DRAW.walls.length > 0 && !A.err : s === 'open' ? DRAW.ops.length > 0 : s === 'rooms' ? DRAW.rooms.length > 0 : false; }
+function bStep(s) {
+  if (!bCan(s)) return;
+  BLD.step = s; BLD.chain = null; BLD.sc = null; BLD.sel = null; BLD.typed = ''; BLD.hover = null; BLD.opNew = null;
+  bPanel(); bRender(); bHintSet();
+}
+function bTool(t) { BLD.tool = t; BLD.chain = null; BLD.typed = ''; if (t === 'draw') BLD.sel = null; bPanel(); bRender(); bHintSet(); }
+function bHintSet() {
+  const s = BLD.step, n = OP_TYPES[DRAW.op][0].toLowerCase();
+  const t = s === 'plan' ? 'Choose or drop a picture of the floor plan · scroll to zoom · drag to move it'
+    : s === 'scale' ? (BLD.sc ? 'Click the other end of the length · Alt: no levelling · Esc cancels' : 'Click one end of a length you know · drag to move the picture · scroll to zoom')
+    : s === 'walls' ? (BLD.tool === 'select' ? 'Click a wall to change it · drag a corner to move it · Del removes · W: draw walls'
+      : BLD.chain ? 'Click the next corner · type a length in cm, then Enter · Enter, Esc or double-click stops · Alt: no snapping' : 'Click where a wall starts · drag to move the picture · scroll to zoom · V: select')
+    : s === 'open' ? `Click a wall to add a ${n} · drag along a wall over the gap for its exact width · drag one to move it`
+    : s === 'rooms' ? 'Click inside a room to fill it · click a filled room to name it and add photos'
+    : 'Check the name and the heights, then build the house';
+  $('#bHint').textContent = t;
+}
+function bRender() { if (!BLD.raf) BLD.raf = requestAnimationFrame(bDraw); }
+window.addEventListener('resize', () => { if (BLD.open) bRender(); });
+
+function bPill(g, x, y, text, bg, fg) {
+  g.font = '600 12px Inter, system-ui, sans-serif';
+  const w = g.measureText(text).width + 12;
+  g.fillStyle = bg; g.beginPath(); g.roundRect(x - w / 2, y - 10, w, 20, 5); g.fill();
+  g.fillStyle = fg; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, x, y + 0.5);
+}
+function bGrid(g, ppm) {
+  const k = BLD.k, step = ppm * k, x0 = BLD.ox, y0 = BLD.oy, W = DRAW.iw * k, H = DRAW.ih * k, cw = bcv.clientWidth, ch = bcv.clientHeight;
+  g.fillStyle = '#fbfaf7'; g.fillRect(x0, y0, W, H);
+  const lines = (s, col) => {
+    if (s < 5) return;
+    g.strokeStyle = col; g.lineWidth = 1; g.beginPath();
+    for (let x = Math.max(0, Math.floor(-x0 / s) * s); x <= Math.min(W, cw - x0) + 0.5; x += s) { g.moveTo(x0 + x, Math.max(y0, 0)); g.lineTo(x0 + x, Math.min(y0 + H, ch)); }
+    for (let y = Math.max(0, Math.floor(-y0 / s) * s); y <= Math.min(H, ch - y0) + 0.5; y += s) { g.moveTo(Math.max(x0, 0), y0 + y); g.lineTo(Math.min(x0 + W, cw), y0 + y); }
+    g.stroke();
+  };
+  if (step > 150) lines(step / 10, 'rgba(29,28,26,.05)');
+  lines(step, 'rgba(29,28,26,.12)');
+  lines(step * 5, 'rgba(29,28,26,.24)');
+}
+function bDraw() {
+  BLD.raf = 0;
+  if (!BLD.open) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2), cw = bcv.clientWidth, ch = bcv.clientHeight;
+  if (bcv.width !== Math.round(cw * dpr) || bcv.height !== Math.round(ch * dpr)) { bcv.width = Math.round(cw * dpr); bcv.height = Math.round(ch * dpr); }
+  const g = bcv.getContext('2d'), k = BLD.k, ppm = bPpm(), s = BLD.step;
+  const X = (p) => p[0] * k + BLD.ox, Y = (p) => p[1] * k + BLD.oy;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.fillStyle = C.canvas; g.fillRect(0, 0, cw, ch);
+  if (BLD.img) { g.imageSmoothingQuality = 'high'; g.drawImage(BLD.img, BLD.ox, BLD.oy, DRAW.iw * k, DRAW.ih * k); }
+  else if (DRAW.grid) bGrid(g, ppm);
+  if (DRAW.iw) { g.strokeStyle = 'rgba(29,28,26,.2)'; g.lineWidth = 1; g.strokeRect(BLD.ox - 0.5, BLD.oy - 0.5, DRAW.iw * k + 1, DRAW.ih * k + 1); }
+  const A = bAnalyse(), M = (p) => [p[0] * A.k * k + BLD.ox, p[1] * A.k * k + BLD.oy]; // metres on the picture to the screen
+  const poly = (pts) => { g.beginPath(); pts.forEach((p, j) => { const q = M(p); j ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]); }); g.closePath(); };
+  // the floor once the outside walls close, then the rooms
+  if (A.base && s === 'walls') { poly(A.base); g.fillStyle = 'rgba(30,107,120,.08)'; g.fill(); }
+  DRAW.rooms.forEach((r, i) => {
+    const res = A.rooms.get(r.id); if (!res || !res.pts) return;
+    poly(res.pts);
+    g.globalAlpha = s === 'rooms' || s === 'finish' ? 0.62 : 0.32; g.fillStyle = ROOM_TINTS[i % ROOM_TINTS.length]; g.fill(); g.globalAlpha = 1;
+    const on = BLD.sel && BLD.sel.room === r.id, hv = BLD.hover && BLD.hover.room === r.id;
+    if (on || hv) { g.strokeStyle = C.select; g.lineWidth = on ? 2.5 : 1.5; g.stroke(); }
+  });
+  // walls go on a layer of their own, so corners where two overlap keep one shade
+  const L = BLD.layer || (BLD.layer = document.createElement('canvas'));
+  if (L.width !== bcv.width || L.height !== bcv.height) { L.width = bcv.width; L.height = bcv.height; }
+  const lg = L.getContext('2d');
+  lg.setTransform(dpr, 0, 0, dpr, 0, 0); lg.clearRect(0, 0, cw, ch); lg.lineCap = 'square';
+  const selW = BLD.sel && BLD.sel.wall, hovW = BLD.hover && BLD.hover.wall;
+  for (const w of DRAW.walls) {
+    if (w.line) continue;
+    lg.strokeStyle = w.id === selW ? C.measure : w.id === hovW && s === 'walls' ? '#2b8796' : C.select;
+    lg.lineWidth = Math.max(2, w.t * ppm * k);
+    lg.beginPath(); lg.moveTo(X(w.a), Y(w.a)); lg.lineTo(X(w.b), Y(w.b)); lg.stroke();
+  }
+  if (BLD.chain && BLD.cur && s === 'walls') {
+    lg.strokeStyle = C.select; lg.lineWidth = Math.max(2, DRAW.t * ppm * k);
+    lg.beginPath(); lg.moveTo(X(BLD.chain.last), Y(BLD.chain.last)); lg.lineTo(X(BLD.cur), Y(BLD.cur)); lg.stroke();
+  }
+  g.globalAlpha = 0.5; g.drawImage(L, 0, 0, cw, ch); g.globalAlpha = 1;
+  // the traced middle lines, and room dividers dashed
+  for (const w of DRAW.walls) {
+    g.setLineDash(w.line ? [6, 4] : []);
+    g.strokeStyle = w.line ? (w.id === selW ? C.measure : C.select) : 'rgba(255,255,255,.9)'; g.lineWidth = w.line ? 2 : 1;
+    g.beginPath(); g.moveTo(X(w.a), Y(w.a)); g.lineTo(X(w.b), Y(w.b)); g.stroke();
+  }
+  g.setLineDash([]);
+  // doors, windows and openings
+  const drawOp = (o, ghost) => {
+    const w = wallOf(o.wall); if (!w) return;
+    const n = bNormal(w), tp = Math.max(3, (w.t * ppm * k) / 2) + 1, p0 = bAt(w, o.p0), p1 = bAt(w, o.p1), S0 = [X(p0), Y(p0)], S1 = [X(p1), Y(p1)];
+    g.beginPath();
+    g.moveTo(S0[0] + n[0] * tp, S0[1] + n[1] * tp); g.lineTo(S1[0] + n[0] * tp, S1[1] + n[1] * tp);
+    g.lineTo(S1[0] - n[0] * tp, S1[1] - n[1] * tp); g.lineTo(S0[0] - n[0] * tp, S0[1] - n[1] * tp); g.closePath();
+    const on = !ghost && BLD.sel && BLD.sel.op === o.id;
+    g.globalAlpha = ghost ? 0.6 : 1;
+    g.fillStyle = o.t === 'window' ? '#dcebf0' : '#ffffff'; g.fill();
+    g.strokeStyle = on ? C.measure : C.ink; g.lineWidth = on ? 2.2 : 1.2; g.setLineDash(o.t === 'gap' ? [4, 3] : []); g.stroke(); g.setLineDash([]);
+    if (o.t === 'window') { g.lineWidth = 1; g.beginPath(); g.moveTo(S0[0], S0[1]); g.lineTo(S1[0], S1[1]); g.stroke(); }
+    else if (o.t !== 'gap') {
+      const width = bDist(S0, S1), two = o.t === 'double' || (o.t === 'glass' && width / k / ppm > 1.2), sw = o.swing || 1, d = [n[0] * sw, n[1] * sw];
+      const leaves = two ? [[S0, S1, width / 2], [S1, S0, width / 2]] : o.hinge ? [[S1, S0, width]] : [[S0, S1, width]];
+      g.strokeStyle = on ? C.measure : C.ink; g.lineWidth = 1.4;
+      for (const [H, F, Lw] of leaves) {
+        const c = [(F[0] - H[0]) / width, (F[1] - H[1]) / width], f0 = [H[0] + d[0] * tp, H[1] + d[1] * tp];
+        g.beginPath(); g.moveTo(f0[0], f0[1]); g.lineTo(f0[0] + d[0] * Lw, f0[1] + d[1] * Lw); g.stroke();
+        g.lineWidth = 0.9; g.setLineDash([3, 3]); g.beginPath();
+        for (let i = 0; i <= 16; i++) { const a = (i / 16) * Math.PI / 2, v = [d[0] * Math.cos(a) + c[0] * Math.sin(a), d[1] * Math.cos(a) + c[1] * Math.sin(a)]; const q = [f0[0] + v[0] * Lw, f0[1] + v[1] * Lw]; i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]); }
+        g.stroke(); g.setLineDash([]); g.lineWidth = 1.4;
+      }
+    }
+    g.globalAlpha = 1;
+    if (on) {
+      for (const S of [S0, S1]) { g.fillStyle = '#fff'; g.strokeStyle = C.measure; g.lineWidth = 2; g.beginPath(); g.rect(S[0] - 4, S[1] - 4, 8, 8); g.fill(); g.stroke(); }
+      // how far it is from the start of its wall
+      const a = [X(w.a), Y(w.a)], off = [n[0] * (tp + 14), n[1] * (tp + 14)];
+      g.strokeStyle = C.measure; g.lineWidth = 1; g.setLineDash([4, 3]);
+      g.beginPath(); g.moveTo(a[0] + off[0], a[1] + off[1]); g.lineTo(S0[0] + off[0], S0[1] + off[1]); g.stroke(); g.setLineDash([]);
+      if (o.p0 > 1) bPill(g, (a[0] + S0[0]) / 2 + off[0], (a[1] + S0[1]) / 2 + off[1], `${bCm(o.p0)} cm`, C.measure, '#fff');
+      bPill(g, (S0[0] + S1[0]) / 2 - off[0], (S0[1] + S1[1]) / 2 - off[1], `${bCm(o.p1 - o.p0)} cm`, C.ink, '#fff');
+    }
+  };
+  for (const o of DRAW.ops) drawOp(o, false);
+  if (BLD.opNew) drawOp({ ...BLD.opNew, t: DRAW.op, p0: Math.min(BLD.opNew.p0, BLD.opNew.p1), p1: Math.max(BLD.opNew.p0, BLD.opNew.p1) + 0.01, swing: 1 }, true);
+  else if (s === 'open' && BLD.hover && BLD.hover.wall && ppm) {
+    // where a click would put one
+    const w = wallOf(BLD.hover.wall), Lw = bDist(w.a, w.b), c = clamp(bProj(BLD.hover.at, w.a, w.b).t, 0, 1) * Lw, half = (OP_TYPES[DRAW.op][1] * ppm) / 2;
+    drawOp({ wall: w.id, t: DRAW.op, p0: clamp(c - half, 0, Math.max(0, Lw - 2 * half)), p1: clamp(c - half, 0, Math.max(0, Lw - 2 * half)) + Math.min(2 * half, Lw), swing: 1 }, true);
+  }
+  // corners, and the ends that meet nothing in red
+  if (s === 'walls' || s === 'rooms' || s === 'finish') {
+    for (const w of DRAW.walls) for (const p of [w.a, w.b]) {
+      const free = bFreeEnd(p, w);
+      if (!free && s !== 'walls') continue;
+      g.fillStyle = free ? C.clash : '#fff'; g.strokeStyle = free ? '#fff' : C.select; g.lineWidth = 1.5;
+      g.beginPath(); g.arc(X(p), Y(p), free ? 5 : 3.5, 0, Math.PI * 2); g.fill(); g.stroke();
+    }
+  }
+  if (BLD.hover && BLD.hover.node && s === 'walls') { const p = BLD.hover.node; g.strokeStyle = C.measure; g.lineWidth = 2; g.beginPath(); g.arc(X(p), Y(p), 7, 0, Math.PI * 2); g.stroke(); }
+  // the scale line
+  const sc = BLD.sc ? { a: BLD.sc.a, b: BLD.cur || BLD.sc.a, cm: null } : DRAW.scale && DRAW.scale.b ? DRAW.scale : null;
+  if (sc && s === 'scale') {
+    const a = [X(sc.a), Y(sc.a)], b = [X(sc.b), Y(sc.b)], L2 = bDist(a, b) || 1, n = [-(b[1] - a[1]) / L2, (b[0] - a[0]) / L2];
+    g.strokeStyle = C.measure; g.lineWidth = 2.5; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]);
+    for (const p of [a, b]) { g.moveTo(p[0] - n[0] * 9, p[1] - n[1] * 9); g.lineTo(p[0] + n[0] * 9, p[1] + n[1] * 9); }
+    g.stroke();
+    if (L2 > 4) bPill(g, (a[0] + b[0]) / 2 + n[0] * 18, (a[1] + b[1]) / 2 + n[1] * 18, sc.cm ? `${sc.cm} cm` : '? cm', C.measure, '#fff');
+  }
+  // the wall being drawn: its length, and guides to the corners it lines up with
+  if (s === 'walls' && BLD.tool === 'draw' && BLD.cur) {
+    g.strokeStyle = C.measure; g.lineWidth = 1; g.setLineDash([5, 4]);
+    for (const [p, q] of BLD.guides) { g.beginPath(); g.moveTo(X(p), Y(p)); g.lineTo(X(q), Y(q)); g.stroke(); }
+    g.setLineDash([]);
+    g.fillStyle = C.measure; g.beginPath(); g.arc(X(BLD.cur), Y(BLD.cur), 4, 0, Math.PI * 2); g.fill();
+    if (BLD.chain && ppm) {
+      const a = BLD.chain.last, d = bDist(a, BLD.cur) / ppm;
+      bPill(g, (X(a) + X(BLD.cur)) / 2, (Y(a) + Y(BLD.cur)) / 2 - 18, d >= 1 ? `${d.toFixed(2)} m` : `${Math.round(d * 100)} cm`, C.ink, '#fff');
+    }
+    if (BLD.typed) bPill(g, X(BLD.cur) + 40, Y(BLD.cur) + 24, `${BLD.typed} cm ↵`, C.measure, '#fff');
+  }
+  const showLen = (w) => { const m = [(X(w.a) + X(w.b)) / 2, (Y(w.a) + Y(w.b)) / 2]; bPill(g, m[0], m[1] - 16, `${bCm(bDist(w.a, w.b))} cm`, C.ink, '#fff'); };
+  if (s === 'walls' && selW && wallOf(selW)) showLen(wallOf(selW));
+  if (s === 'walls' && BLD.tool === 'select' && hovW && hovW !== selW && wallOf(hovW)) showLen(wallOf(hovW));
+  // room names and sizes, and red marks where a room is not closed
+  DRAW.rooms.forEach((r) => {
+    const res = A.rooms.get(r.id); if (!res) return;
+    if (res.err) {
+      const p = [X(r.seed), Y(r.seed)];
+      g.fillStyle = C.clash; g.beginPath(); g.arc(p[0], p[1], 9, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#fff'; g.font = '700 12px Inter, system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('!', p[0], p[1] + 0.5);
+      if (s === 'rooms') bPill(g, p[0], p[1] + 22, `${r.name}: not closed`, C.clash, '#fff');
+      return;
+    }
+    if (s !== 'rooms' && s !== 'finish') return;
+    const q = M(res.label);
+    bPill(g, q[0], q[1] - 9, r.name || 'Room', 'rgba(255,255,255,.92)', C.ink);
+    g.font = '500 11px Inter, system-ui, sans-serif'; g.fillStyle = C.ink; g.textAlign = 'center'; g.fillText(`${res.area.toFixed(1)} m²`, q[0], q[1] + 10);
+  });
+  if (!DRAW.img && !DRAW.grid) {
+    g.fillStyle = tok('ink-muted', '#6b675f'); g.font = '500 15px Inter, system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    const narrow = window.innerWidth <= 860;
+    g.fillText('Choose or drop a picture of the floor plan', narrow ? cw / 2 : 324 + (cw - 324) / 2, narrow ? ch * 0.28 : ch / 2);
+  }
+}
+
+/* snapping while drawing: onto a corner, square to the last corner, in line with another corner, or onto a wall where it joins it */
+function bSnapPoint(p, from, alt, skip) {
+  const tol = 10 / BLD.k, guides = [], pts = [];
+  for (const w of DRAW.walls) for (const key of ['a', 'b']) if (!skip || !skip.has(w.id + key)) pts.push(w[key]);
+  if (!alt) { let best = null, bd = tol; for (const q of pts) { const d = bDist(p, q); if (d < bd) { bd = d; best = q; } } if (best) return { p: best.slice(), node: true, guides }; }
+  let q = p.slice(), dir = null;
+  if (from && !alt) {
+    const dx = p[0] - from[0], dy = p[1] - from[1], L = Math.hypot(dx, dy), ang = Math.atan2(dy, dx), st = Math.PI / 4, r = Math.round(ang / st) * st;
+    if (L > 0 && Math.abs(ang - r) < 0.14) {
+      dir = [Math.round(Math.cos(r) * 1e9) / 1e9, Math.round(Math.sin(r) * 1e9) / 1e9];
+      const d = dx * dir[0] + dy * dir[1];
+      q = [from[0] + dir[0] * d, from[1] + dir[1] * d];
+      if (dir[1] === 0) q[1] = from[1];
+      if (dir[0] === 0) q[0] = from[0];
+    }
+  }
+  if (alt) return { p: q, guides };
+  const slant = dir && dir[0] !== 0 && dir[1] !== 0;
+  let ax = null, az = null;
+  if (!slant) for (const c of pts) {
+    if ((!dir || dir[1] === 0) && Math.abs(c[0] - q[0]) < tol * 0.8 && (!ax || Math.abs(c[0] - q[0]) < Math.abs(ax[0] - q[0]))) ax = c;
+    if ((!dir || dir[0] === 0) && Math.abs(c[1] - q[1]) < tol * 0.8 && (!az || Math.abs(c[1] - q[1]) < Math.abs(az[1] - q[1]))) az = c;
+  }
+  if (ax) q[0] = ax[0];
+  if (az) q[1] = az[1];
+  if (ax) guides.push([ax, q]);
+  if (az) guides.push([az, q]);
+  if (!ax && !az) {
+    let bw = null, bd = tol * 0.8;
+    for (const w of DRAW.walls) { if (skip && (skip.has(w.id + 'a') || skip.has(w.id + 'b'))) continue; const d = bSegDist(q, w.a, w.b); if (d < bd) { bd = d; bw = w; } }
+    if (bw) {
+      const X = dir ? bIntersect(from, dir, bw.a, bw.b) : bProj(q, bw.a, bw.b).q;
+      if (X) return { p: X, wall: bw.id, guides };
+    }
+  }
+  // on the grid, corners fall on whole centimetres in steps of 5
+  if (DRAW.grid) q = q.map((v) => Math.round(v / 5) * 5);
+  // a point lined up onto a wall still joins it
+  const on = DRAW.walls.find((w) => !(skip && (skip.has(w.id + 'a') || skip.has(w.id + 'b'))) && bSegDist(q, w.a, w.b) < 0.75);
+  return on ? { p: q, wall: on.id, guides } : { p: q, guides };
+}
+function bAddPoint(sn) {
+  const q = sn.p;
+  if (!BLD.chain) { BLD.chain = { start: q, last: q }; BLD.cur = q; bRender(); bHintSet(); return; }
+  const last = BLD.chain.last;
+  if (bDist(q, last) < 2 / BLD.k) return;
+  DRAW.walls.push({ id: 'w' + uid(), a: last.slice(), b: q.slice(), t: DRAW.t });
+  BLD.chain.last = q; BLD.typed = '';
+  // a wall that reaches a corner or another wall ends there
+  if (sn.node || sn.wall) BLD.chain = null;
+  bChange();
+}
+function bEndChain() { BLD.chain = null; BLD.typed = ''; bRender(); bHintSet(); }
+function bTypedLength() {
+  const v = parseFloat(BLD.typed.replace(',', '.')); BLD.typed = '';
+  if (!(v > 0) || !BLD.chain) { bRender(); return; }
+  const last = BLD.chain.last, cur = BLD.cur || last, L = bDist(cur, last), dir = L > 0 ? [(cur[0] - last[0]) / L, (cur[1] - last[1]) / L] : [1, 0];
+  const px = (v / 100) * bPpm(), q = [last[0] + dir[0] * px, last[1] + dir[1] * px];
+  if (Math.abs(dir[1]) < 1e-9) q[1] = last[1];
+  if (Math.abs(dir[0]) < 1e-9) q[0] = last[0];
+  bAddPoint({ p: q });
+}
+function bWallAt(p, lines = true) {
+  const k = bPpm();
+  let best = null, bd = Infinity;
+  for (const w of DRAW.walls) {
+    if (!lines && w.line) continue;
+    const r = bProj(p, w.a, w.b); if (r.t < -0.02 || r.t > 1.02) continue;
+    const d = bDist(p, r.q), lim = Math.max((w.t * k) / 2, 7 / BLD.k);
+    if (d <= lim && d < bd) { bd = d; best = w; }
+  }
+  return best;
+}
+function bOpAt(p) {
+  const k = bPpm(), tol = 7 / BLD.k;
+  for (const o of DRAW.ops) {
+    const w = wallOf(o.wall); if (!w) continue;
+    const r = bProj(p, w.a, w.b), s = r.t * r.L;
+    if (bDist(p, r.q) > Math.max((w.t * k) / 2, tol) + 2 / BLD.k || s < o.p0 - tol || s > o.p1 + tol) continue;
+    return { o, end: Math.abs(s - o.p0) < tol ? 0 : Math.abs(s - o.p1) < tol ? 1 : -1 };
+  }
+  return null;
+}
+function bRoomAt(p) {
+  const A = bAnalyse(); if (!A.G) return null;
+  const j = A.G.at(p[0] / A.k, p[1] / A.k); if (j < 0) return null;
+  const idx = A.G.room[j];
+  if (idx >= 0) return DRAW.rooms[idx];
+  return DRAW.rooms.find((r) => { const res = A.rooms.get(r.id); return res && res.err && bDist(r.seed, p) < 10 / BLD.k; }) || null;
+}
+function bAddOp(w, s0, s1, at) {
+  const k = bPpm(), L = bDist(w.a, w.b), type = DRAW.op, width = Math.min(OP_TYPES[type][1] * k, L);
+  let p0, p1;
+  if (s1 == null || Math.abs(s1 - s0) < 0.2 * k) { p0 = s0 - width / 2; p1 = s0 + width / 2; } else { p0 = Math.min(s0, s1); p1 = Math.max(s0, s1); }
+  if (p0 < 0) { p1 -= p0; p0 = 0; }
+  if (p1 > L) { p0 = Math.max(0, p0 - (p1 - L)); p1 = L; }
+  if (DRAW.ops.some((o) => o.wall === w.id && o.p0 < p1 - 1 && o.p1 > p0 + 1)) { toast('There is a door or window there already. Drag it, or delete it first.'); return; }
+  const x = bAnalyse().walls.find((y) => y.id === w.id), n = bNormal(w), side = (at[0] - w.a[0]) * n[0] + (at[1] - w.a[1]) * n[1];
+  const o = { id: 'o' + uid(), wall: w.id, t: type, p0: r1(p0), p1: r1(p1), hinge: 0, swing: x && x.ext ? -x.ext : side < 0 ? -1 : 1 };
+  if (x && x.ext && type === 'door') o.front = true; // a door in an outside wall opens inwards and is the front door
+  DRAW.ops.push(o); BLD.sel = { op: o.id };
+  bChange();
+}
+function bDeleteSel() {
+  const s = BLD.sel; if (!s) return;
+  if (s.wall) { DRAW.walls = DRAW.walls.filter((w) => w.id !== s.wall); DRAW.ops = DRAW.ops.filter((o) => o.wall !== s.wall); }
+  if (s.op) DRAW.ops = DRAW.ops.filter((o) => o.id !== s.op);
+  if (s.room) DRAW.rooms = DRAW.rooms.filter((r) => r.id !== s.room);
+  BLD.sel = null; bChange();
+}
+
+// a press that starts dragging something; anything else drags the picture
+function bPress(p) {
+  const tol = 9 / BLD.k, s = BLD.step;
+  if (s === 'scale' && DRAW.scale && DRAW.scale.b && !BLD.sc) {
+    const end = bDist(p, DRAW.scale.a) < tol ? 'a' : bDist(p, DRAW.scale.b) < tol ? 'b' : null;
+    if (end) return { move: (q, e) => { const o = end === 'a' ? DRAW.scale.b : DRAW.scale.a; DRAW.scale[end] = e.altKey ? q : bAxisSnap(o, q); bRender(); }, up: (q, e, click) => { if (click) bClick(q, e); else bChange(); } };
+  }
+  if (s === 'walls' && BLD.tool === 'select') {
+    const n = bNodeNear(p, tol);
+    if (n) {
+      const ends = [], skip = new Set(), at = n.slice();
+      for (const w of DRAW.walls) for (const key of ['a', 'b']) if (bSame(w[key], at)) { ends.push([w, key]); skip.add(w.id + key); }
+      return {
+        move: (q, e) => { const sn = bSnapPoint(q, null, e.altKey, skip); for (const [w, key] of ends) w[key] = sn.p.slice(); BLD.guides = sn.guides; BLD.cur = null; bRender(); },
+        up: (q, e, click) => { BLD.guides = []; if (click) bClick(q, e); else bChange(); },
+      };
+    }
+  }
+  if (s === 'open') {
+    const hit = bOpAt(p);
+    if (hit) {
+      const o = hit.o, w = wallOf(o.wall), Lw = bDist(w.a, w.b), s0 = bProj(p, w.a, w.b).t * Lw, p0 = o.p0, p1 = o.p1;
+      BLD.sel = { op: o.id }; bPanel(); bRender();
+      return {
+        move: (q) => {
+          const sq = clamp(bProj(q, w.a, w.b).t, 0, 1) * Lw;
+          if (hit.end === 0) o.p0 = r1(clamp(sq, 0, o.p1 - 4));
+          else if (hit.end === 1) o.p1 = r1(clamp(sq, o.p0 + 4, Lw));
+          else { const d = clamp(sq - s0, -p0, Lw - p1); o.p0 = r1(p0 + d); o.p1 = r1(p1 + d); }
+          bRender();
+        },
+        up: (q, e, click) => { if (!click) bChange(); },
+      };
+    }
+    const w = bWallAt(p, false);
+    if (w && bPpm()) {
+      const Lw = bDist(w.a, w.b), s0 = clamp(bProj(p, w.a, w.b).t, 0, 1) * Lw;
+      return {
+        move: (q) => { BLD.opNew = { wall: w.id, p0: s0, p1: clamp(bProj(q, w.a, w.b).t, 0, 1) * Lw }; bRender(); },
+        up: (q, e, click) => { const nw = BLD.opNew; BLD.opNew = null; bAddOp(w, s0, click || !nw ? null : nw.p1, p); },
+      };
+    }
+  }
+  return null;
+}
+function bClick(p, e) {
+  const s = BLD.step;
+  if (s === 'scale') {
+    if (!BLD.sc) { BLD.sc = { a: p }; BLD.cur = p; }
+    else {
+      const b = e.altKey ? p : bAxisSnap(BLD.sc.a, p);
+      if (bDist(b, BLD.sc.a) < 5 / BLD.k) return;
+      DRAW.scale = { a: BLD.sc.a, b, cm: (DRAW.scale && DRAW.scale.cm) || null };
+      BLD.sc = null; bChange();
+      setTimeout(() => { const f = $('#bScaleCm'); if (f) { f.focus(); f.select(); } }, 30);
+    }
+    bRender(); bHintSet(); return;
+  }
+  if (s === 'walls') {
+    if (BLD.tool === 'draw') { bAddPoint(bSnapPoint(p, BLD.chain && BLD.chain.last, e.altKey)); return; }
+    const w = bWallAt(p); BLD.sel = w ? { wall: w.id } : null; bPanel(); bRender(); return;
+  }
+  if (s === 'open') { BLD.sel = null; bPanel(); bRender(); return; }
+  if (s === 'rooms') {
+    const r = bRoomAt(p);
+    if (r) { BLD.sel = { room: r.id }; bPanel(); bRender(); return; }
+    const A = bAnalyse(), j = A.G ? A.G.at(p[0] / A.k, p[1] / A.k) : -1;
+    if (A.err || j < 0 || A.G.out[j]) { toast(A.err ? 'The outside walls do not close yet: the red dots are wall ends that meet nothing.' : 'That is outside the house. Click inside a room.', 4000); return; }
+    if (A.G.wall[j]) { toast('That is a wall. Click inside the room.'); return; }
+    const nr = { id: 'r' + uid(), name: 'Room ' + (DRAW.rooms.length + 1), seed: [r1(p[0]), r1(p[1])], mat: 'oak' };
+    DRAW.rooms.push(nr); BLD.sel = { room: nr.id };
+    bChange();
+    setTimeout(() => { const f = $('#bRoomName'); if (f) { f.focus(); f.select(); } }, 30);
+  }
+}
+function bHover(p, e) {
+  const s = BLD.step;
+  let cur = 'default';
+  BLD.hover = null;
+  if (s === 'scale') {
+    BLD.cur = BLD.sc ? (e.altKey ? p : bAxisSnap(BLD.sc.a, p)) : p;
+    cur = DRAW.scale && DRAW.scale.b && !BLD.sc && (bDist(p, DRAW.scale.a) < 9 / BLD.k || bDist(p, DRAW.scale.b) < 9 / BLD.k) ? 'grab' : 'crosshair';
+  } else if (s === 'walls' && BLD.tool === 'draw') {
+    const sn = bSnapPoint(p, BLD.chain && BLD.chain.last, e.altKey);
+    BLD.cur = sn.p; BLD.guides = sn.guides; cur = 'crosshair';
+  } else if (s === 'walls') {
+    const n = bNodeNear(p, 9 / BLD.k), w = n ? null : bWallAt(p);
+    BLD.hover = n ? { node: n } : w ? { wall: w.id } : null;
+    cur = n ? 'move' : w ? 'pointer' : 'default';
+  } else if (s === 'open') {
+    const h = bOpAt(p), w = h ? null : bWallAt(p, false);
+    if (h) { const u = bDir(wallOf(h.o.wall)); cur = h.end >= 0 ? (Math.abs(u[0]) > Math.abs(u[1]) ? 'ew-resize' : 'ns-resize') : 'grab'; BLD.hover = { op: h.o.id }; }
+    else if (w) { cur = 'copy'; BLD.hover = { wall: w.id, at: p }; }
+  } else if (s === 'rooms') {
+    const r = bRoomAt(p); BLD.hover = r ? { room: r.id } : null; cur = 'pointer';
+  }
+  bcv.style.cursor = BLD.space ? 'grab' : cur;
+  bRender();
+}
+const bPos = (e) => { const r = bcv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+const bImg = (m) => [(m[0] - BLD.ox) / BLD.k, (m[1] - BLD.oy) / BLD.k];
+bcv.addEventListener('pointerdown', (e) => {
+  bcv.focus({ preventScroll: true });
+  const m = bPos(e);
+  BLD.ptrs.set(e.pointerId, m);
+  try { bcv.setPointerCapture(e.pointerId); } catch (err) { /* the pointer is already gone */ }
+  if (BLD.ptrs.size === 2) {
+    const [a, b] = [...BLD.ptrs.values()];
+    BLD.pinch = { d: bDist(a, b) || 1, c: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], k: BLD.k, ox: BLD.ox, oy: BLD.oy };
+    BLD.down = null; BLD.drag = null; BLD.pan = null; BLD.opNew = null;
+    return;
+  }
+  BLD.down = { m, button: e.button, moved: false };
+  if (e.button === 1 || e.button === 2 || BLD.space) { BLD.pan = { m, ox: BLD.ox, oy: BLD.oy }; return; }
+  if (e.button === 0) BLD.drag = bPress(bImg(m));
+});
+bcv.addEventListener('pointermove', (e) => {
+  const m = bPos(e);
+  if (BLD.ptrs.has(e.pointerId)) BLD.ptrs.set(e.pointerId, m);
+  if (BLD.pinch && BLD.ptrs.size === 2) {
+    const [a, b] = [...BLD.ptrs.values()], P = BLD.pinch, c = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], k = clamp((P.k * bDist(a, b)) / P.d, 0.02, 60), f = k / P.k;
+    BLD.k = k; BLD.ox = c[0] - (P.c[0] - P.ox) * f; BLD.oy = c[1] - (P.c[1] - P.oy) * f;
+    bRender(); return;
+  }
+  const D = BLD.down;
+  if (D && !D.moved && bDist(m, D.m) > 4) { D.moved = true; if (!BLD.drag && !BLD.pan) BLD.pan = { m: D.m, ox: BLD.ox, oy: BLD.oy }; }
+  if (BLD.pan) { BLD.ox = BLD.pan.ox + m[0] - BLD.pan.m[0]; BLD.oy = BLD.pan.oy + m[1] - BLD.pan.m[1]; bcv.style.cursor = 'grabbing'; bRender(); return; }
+  if (BLD.drag) { if (D && D.moved) BLD.drag.move(bImg(m), e); return; }
+  bHover(bImg(m), e);
+});
+bcv.addEventListener('pointerup', (e) => {
+  BLD.ptrs.delete(e.pointerId);
+  if (BLD.pinch) { if (BLD.ptrs.size < 2) BLD.pinch = null; BLD.down = null; return; }
+  const D = BLD.down, m = bPos(e);
+  BLD.down = null;
+  if (BLD.drag) { const d = BLD.drag; BLD.drag = null; d.up(bImg(m), e, !(D && D.moved)); return; }
+  if (BLD.pan) { BLD.pan = null; bcv.style.cursor = ''; if (D && !D.moved && D.button === 2 && BLD.chain) bEndChain(); return; }
+  if (D && !D.moved && D.button === 0) bClick(bImg(m), e);
+});
+bcv.addEventListener('pointercancel', (e) => { BLD.ptrs.delete(e.pointerId); BLD.pinch = null; BLD.pan = null; BLD.drag = null; BLD.down = null; BLD.opNew = null; bRender(); });
+bcv.addEventListener('pointerleave', () => { if (!BLD.down) { BLD.hover = null; if (!BLD.chain) BLD.cur = null; bRender(); } });
+bcv.addEventListener('dblclick', () => { if (BLD.chain) bEndChain(); });
+bcv.addEventListener('contextmenu', (e) => e.preventDefault());
+bcv.addEventListener('wheel', (e) => { e.preventDefault(); bZoomAt(bPos(e), Math.exp(-e.deltaY * (e.ctrlKey ? 0.012 : 0.0016))); }, { passive: false });
+// while the builder or a photo is open, its keys go there and not to the planner behind it
+window.addEventListener('keydown', (e) => {
+  if (pbox) {
+    if (e.key === 'Escape') closePhotos(); else if (e.key === 'ArrowLeft') { pbox.i--; showPhoto(); } else if (e.key === 'ArrowRight') { pbox.i++; showPhoto(); }
+    e.stopImmediatePropagation(); return;
+  }
+  if (!BLD.open) return;
+  e.stopImmediatePropagation();
+  if (typing(e)) { if (e.key === 'Escape') e.target.blur(); return; }
+  const k = e.key, mod = e.ctrlKey || e.metaKey, centre = [bcv.clientWidth / 2, bcv.clientHeight / 2];
+  if (mod && k.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? bRedo() : bUndo(); return; }
+  if (mod && k.toLowerCase() === 'y') { e.preventDefault(); bRedo(); return; }
+  if (mod) return;
+  if (k === ' ') { BLD.space = true; bcv.style.cursor = 'grab'; e.preventDefault(); return; }
+  if (BLD.chain && /^[0-9.,]$/.test(k)) { BLD.typed += k; bRender(); return; }
+  if (BLD.chain && k === 'Backspace' && BLD.typed) { BLD.typed = BLD.typed.slice(0, -1); bRender(); return; }
+  if (k === 'Enter') { if (BLD.typed) bTypedLength(); else if (BLD.chain) bEndChain(); return; }
+  if (k === 'Escape') {
+    if (BLD.typed) { BLD.typed = ''; bRender(); } else if (BLD.chain || BLD.sc) { BLD.chain = null; BLD.sc = null; bRender(); bHintSet(); } else if (BLD.sel) { BLD.sel = null; bPanel(); bRender(); }
+    return;
+  }
+  if ((k === 'Delete' || k === 'Backspace') && BLD.sel) { e.preventDefault(); bDeleteSel(); return; }
+  if (BLD.step === 'walls' && (k === 'v' || k === 'V')) { bTool('select'); return; }
+  if (BLD.step === 'walls' && (k === 'w' || k === 'W')) { bTool('draw'); return; }
+  if (k === '+' || k === '=') bZoomAt(centre, 1.25);
+  else if (k === '-') bZoomAt(centre, 0.8);
+  else if (k === '0') { bFit(); bRender(); }
+}, true);
+window.addEventListener('keyup', (e) => { if (BLD.open && e.key === ' ') { BLD.space = false; bcv.style.cursor = ''; } }, true);
+
+/* the step panel */
+async function bSetPicture(file) {
+  if (!file) return;
+  if (!/^image\//.test(file.type) && !/\.(png|jpe?g|webp|gif|bmp|heic)$/i.test(file.name)) { toast(/\.pdf$/i.test(file.name) ? 'For a PDF, take a screenshot of the page and choose that.' : 'Choose a picture: PNG, JPG or WebP.', 4500); return; }
+  toast('Loading the floor plan…', 8000);
+  const p = await storePicture(file, 4096);
+  if (!p) { toast('This picture could not be read. PNG or JPG works everywhere.', 4000); return; }
+  // the same plan at another size keeps the drawing on it
+  if (DRAW.iw && DRAW.walls.length && Math.abs(DRAW.iw / DRAW.ih - p.w / p.h) < 0.01) {
+    const f = p.w / DRAW.iw, sc = (q) => [q[0] * f, q[1] * f];
+    for (const w of DRAW.walls) { w.a = sc(w.a); w.b = sc(w.b); }
+    for (const o of DRAW.ops) { o.p0 *= f; o.p1 *= f; }
+    for (const r of DRAW.rooms) r.seed = sc(r.seed);
+    if (DRAW.scale) { DRAW.scale.a = sc(DRAW.scale.a); if (DRAW.scale.b) DRAW.scale.b = sc(DRAW.scale.b); }
+  } else if (DRAW.walls.length) toast('This picture has another shape, so the walls may not line up with it.', 4500);
+  DRAW.img = p.key; DRAW.iw = p.w; DRAW.ih = p.h; DRAW.grid = false;
+  await bLoadImage(); bFit();
+  bChange();
+  toast('Floor plan loaded.', 1600);
+  if (!bPpm()) bStep('scale');
+}
+async function bTurn(dir) {
+  if (!BLD.img || DRAW.walls.length) return;
+  const c = document.createElement('canvas'); c.width = DRAW.ih; c.height = DRAW.iw;
+  const g = c.getContext('2d'); g.translate(c.width / 2, c.height / 2); g.rotate((dir * Math.PI) / 2); g.drawImage(BLD.img, -DRAW.iw / 2, -DRAW.ih / 2);
+  const blob = await new Promise((res) => c.toBlob(res, 'image/jpeg', 0.92)), key = 'img:' + Date.now().toString(36) + uid();
+  await putModel(key, { kind: 'img', blob, w: c.width, h: c.height, name: 'floor plan' });
+  const rot = (p) => (dir > 0 ? [DRAW.ih - p[1], p[0]] : [p[1], DRAW.iw - p[0]]);
+  if (DRAW.scale) { DRAW.scale.a = rot(DRAW.scale.a); if (DRAW.scale.b) DRAW.scale.b = rot(DRAW.scale.b); }
+  DRAW.img = key; DRAW.iw = c.width; DRAW.ih = c.height;
+  await bLoadImage(); bFit(); bChange();
+}
+function bUseGrid() {
+  DRAW.grid = true; DRAW.img = null; DRAW.iw = 2400; DRAW.ih = 1800; DRAW.scale = { a: [0, 0], b: [100, 0], cm: 100 };
+  BLD.img = null; BLD.imgKey = null;
+  bFit(); bChange(); bStep('walls');
+}
+const numIn = (id, v, min, max) => `<input type="number" id="${id}" value="${v}" min="${min}" max="${max}" step="1">`;
+const navRow = (back, next, nextLabel, ok = true) => `<div class="bnav">${back ? `<button class="btn sm" data-go="${back}">Back</button>` : ''}<span class="spacer"></span>${next ? `<button class="btn primary sm" data-go="${next}"${ok ? '' : ' disabled'}>Next: ${nextLabel}</button>` : ''}</div>`;
+function bPanel() {
+  if (!BLD.open) return;
+  const s = BLD.step, k = bPpm(), A = bAnalyse(), P = $('#bSide');
+  $$('#bSteps button').forEach((b) => { const t = b.dataset.bstep; b.classList.toggle('on', t === s); b.disabled = !bCan(t) || (t === 'scale' && DRAW.grid); b.classList.toggle('done', t !== s && bDone(t)); });
+  const sel = BLD.sel || {}, w = sel.wall && wallOf(sel.wall), o = sel.op && DRAW.ops.find((x) => x.id === sel.op), r = sel.room && DRAW.rooms.find((x) => x.id === sel.room);
+  let h = '';
+  if (s === 'plan') {
+    h = `<div class="ptitle">Floor plan</div>
+      <p class="muted small bp">A picture of the floor plan seen from above: a scan, a screenshot or the image from the listing. For a PDF, take a screenshot of the page.</p>
+      <button class="btn primary block" id="bPick" style="margin-top:12px">${DRAW.img ? 'Choose another picture…' : 'Choose a picture…'}</button>
+      <p class="muted small bp">Or drop it on the drawing area.</p>
+      ${DRAW.img ? `<div class="note info">${DRAW.iw} × ${DRAW.ih} px${BLD.img ? '' : ' · not in this browser, choose it again'}</div>` : ''}
+      ${DRAW.img && !DRAW.walls.length ? `<div class="row"><button class="btn sm" id="bTurnL" style="flex:1">Turn left</button><button class="btn sm" id="bTurnR" style="flex:1">Turn right</button></div><p class="muted small bp">Turn it so the side you want at the top is at the top, before you draw walls.</p>` : ''}
+      ${!DRAW.walls.length ? `<div class="cap">No floor plan?</div><button class="btn block" id="bGrid">Draw on a 1 m grid</button><p class="muted small bp">Then draw the walls by typing their lengths, from your own measurements.</p>` : ''}
+      <div class="cap">Start again</div><button class="btn danger block" id="bReset">Start over with an empty drawing</button>
+      ${navRow(null, DRAW.grid ? 'walls' : 'scale', DRAW.grid ? 'walls' : 'scale', !!(DRAW.img || DRAW.grid))}`;
+  } else if (s === 'scale') {
+    const sc = DRAW.scale && DRAW.scale.b;
+    h = `<div class="ptitle">Scale</div>
+      <p class="muted small bp">Click both ends of a length you know, such as a wall with its size written on the plan. The longer it is, the more accurate the house will be.</p>
+      <label class="field" style="margin-top:12px">Real length of the orange line (cm)<input type="number" id="bScaleCm" min="10" max="10000" step="1" value="${(DRAW.scale && DRAW.scale.cm) || ''}"${sc ? '' : ' disabled'}></label>
+      <div class="note ${k || !sc ? 'info' : 'clash'}" id="bScaleNote">${bScaleNote()}</div>
+      <p class="muted small bp">The line keeps itself level or upright; hold Alt to stop that. Drag an orange end to adjust it, or click twice for a new line.</p>
+      <p class="muted small bp">No sizes on the plan? An inside door is about 83 cm wide, a front door about 93 cm.</p>
+      ${navRow('plan', 'walls', 'walls', k > 0)}`;
+  } else if (s === 'walls') {
+    const free = bFreeEnds().length, n = DRAW.walls.filter((x) => !x.line).length;
+    h = `<div class="ptitle">Walls</div>
+      <div class="pmode"><button data-btool="draw" class="${BLD.tool === 'draw' ? 'on' : ''}">Draw</button><button data-btool="select" class="${BLD.tool === 'select' ? 'on' : ''}">Select and move</button></div>
+      <p class="muted small bp">${BLD.tool === 'draw' ? 'Click the corners along the middle of each wall. Start with the outside walls and click the first corner again to close them. A wall that reaches another wall ends there. Type a length in cm and press Enter for an exact wall; lengths run along the middle, so a room 400 cm wide inside with 20 cm walls is 420.' : 'Click a wall to change it. Drag a corner to move it; the walls on it move along.'}</p>
+      ${BLD.tool === 'draw' ? `<label class="field" style="margin-top:12px">Thickness of new walls (cm)${numIn('bT', cm(DRAW.t), 2, 100)}</label>
+      <div class="chips">${[7, 10, 15, 20, 30].map((v) => `<button data-t="${v}" class="${cm(DRAW.t) === v ? 'on' : ''}">${v}</button>`).join('')}</div>
+      <p class="muted small bp">Outside walls are often 25–35 cm, inside walls 7–12 cm. The band should just cover the wall on the drawing.</p>` : ''}
+      ${w ? `<div class="cap">Selected ${w.line ? 'room divider' : 'wall'}</div>
+        <div class="dims two"><label class="field">Length (cm)${numIn('bWL', bCm(bDist(w.a, w.b)), 1, 10000)}</label><label class="field">Thickness (cm)<input type="number" id="bWT" value="${cm(w.t)}" min="2" max="100"${w.line ? ' disabled' : ''}></label></div>
+        <label class="check"><input type="checkbox" id="bWLow"${w.h ? ' checked' : ''}${w.line ? ' disabled' : ''}> Low wall</label>
+        ${w.h ? `<label class="field" style="margin-top:6px">Height of the low wall (cm)${numIn('bWH', cm(w.h), 10, 400)}</label>` : ''}
+        <label class="check"><input type="checkbox" id="bWLine"${w.line ? ' checked' : ''}> Only divides two rooms (no wall)</label>
+        <div class="actions"><button class="btn danger" id="bDel">Delete ${w.line ? 'divider' : 'wall'}</button></div>` : ''}
+      <div class="note ${free || (n && A.err === 'open') ? 'clash' : 'info'}">${n} wall${n === 1 ? '' : 's'}${free ? ` · ${free} end${free > 1 ? 's' : ''} meet${free > 1 ? '' : 's'} nothing (red)` : ''}${n && A.err === 'open' ? ' · the outside walls do not close yet' : n && !A.err ? ' · closed' : ''}</div>
+      ${navRow(DRAW.grid ? 'plan' : 'scale', 'open', 'doors and windows', DRAW.walls.length > 0)}`;
+  } else if (s === 'open') {
+    const cnt = (f) => DRAW.ops.filter(f).length, doors = cnt((x) => x.t !== 'window' && x.t !== 'gap'), wins = cnt((x) => x.t === 'window'), gaps = cnt((x) => x.t === 'gap');
+    h = `<div class="ptitle">Doors and windows</div>
+      <div class="optypes">${Object.entries(OP_TYPES).map(([key, [nm, wd]]) => `<button data-op="${key}" class="${DRAW.op === key ? 'on' : ''}"><b>${nm}</b><span class="num">${cm(wd)} cm</span></button>`).join('')}</div>
+      <p class="muted small bp">Click a wall to put one in at this width, or drag along the wall over the gap in the drawing for its exact width. Drag one to move it, or its ends to change its width.</p>
+      ${o ? `<div class="cap">Selected ${OP_TYPES[o.t][0].toLowerCase()}</div>
+        <label class="field">Kind<select id="bOT">${Object.entries(OP_TYPES).map(([key, [nm]]) => `<option value="${key}"${o.t === key ? ' selected' : ''}>${nm}</option>`).join('')}</select></label>
+        <div class="dims two" style="margin-top:8px"><label class="field">Width (cm)${numIn('bOW', bCm(o.p1 - o.p0), 20, 2000)}</label><label class="field">From the wall’s end (cm)${numIn('bOP', bCm(o.p0), 0, 10000)}</label></div>
+        ${o.t === 'window' ? `<div class="dims two" style="margin-top:8px"><label class="field">Sill height (cm)${numIn('bOY0', cm(o.y0 ?? DRAW.sill), 0, 300)}</label><label class="field">Top (cm)${numIn('bOY1', cm(o.y1 ?? DRAW.winTop), 30, 400)}</label></div>`
+        : `<label class="field" style="margin-top:8px">Height (cm)${numIn('bOH', cm(o.h ?? DRAW.doorH), 150, 400)}</label>`}
+        ${o.t !== 'window' && o.t !== 'gap' ? `<div class="row">${o.t === 'door' || (o.t === 'glass' && (o.p1 - o.p0) / k <= 1.2) ? '<button class="btn sm" id="bOHinge" style="flex:1">Hinge other side</button>' : ''}<button class="btn sm" id="bOSwing" style="flex:1">Open other way</button></div>
+        <label class="check"><input type="checkbox" id="bOFront"${o.front ? ' checked' : ''}> Front door (starts closed)</label>` : ''}
+        <div class="actions"><button class="btn danger" id="bDel">Delete</button></div>` : ''}
+      <div class="note info">${doors} door${doors === 1 ? '' : 's'} · ${wins} window${wins === 1 ? '' : 's'}${gaps ? ` · ${gaps} opening${gaps === 1 ? '' : 's'}` : ''}</div>
+      ${navRow('walls', 'rooms', 'rooms', true)}`;
+  } else if (s === 'rooms') {
+    h = `<div class="ptitle">Rooms and photos</div>
+      <p class="muted small bp">Click inside each room to fill it, then name it. A room needs walls all around; doors and openings count as wall here. To split an open space, draw a line in Walls and tick “Only divides two rooms”.</p>
+      <div class="blist">${DRAW.rooms.map((x) => { const res = A.rooms.get(x.id), np = bPhotos(x.id).length; return `<div class="list-row${r && r.id === x.id ? ' on' : ''}" data-broom="${x.id}" role="button" tabindex="0"><div class="grow"><div class="t">${esc(x.name)}</div><div class="s num">${res && res.err ? '<span style="color:var(--clash)">not closed</span>' : res ? res.area.toFixed(1) + ' m²' : ''}${np ? ` · ${np} photo${np > 1 ? 's' : ''}` : ''}</div></div></div>`; }).join('') || '<div class="empty">No rooms yet.</div>'}</div>
+      ${r ? `<div class="cap">Selected room</div>
+        <label class="field">Name<input id="bRoomName" list="bRoomNames" value="${esc(r.name)}"></label>
+        <datalist id="bRoomNames">${ROOM_NAMES.map((nm) => `<option value="${nm}">`).join('')}</datalist>
+        <label class="field" style="margin-top:8px">Floor<select id="bRoomMat">${Object.entries(FLOOR_NAMES).map(([key, nm]) => `<option value="${key}"${(r.mat || 'oak') === key ? ' selected' : ''}>${nm}</option>`).join('')}</select></label>
+        <div class="cap">Photos of this room</div>
+        <div class="thumbs">${bPhotos(r.id).map((key, i) => `<button data-bph="${i}" title="Photo ${i + 1}"><img alt="" data-key="${esc(key)}"></button>`).join('')}<button class="add" id="bAddPh" title="Add photos of this room">+</button></div>
+        <p class="muted small bp">For reference while you furnish; they show under Rooms in the planner. You can also drop photos here.</p>
+        <div class="actions"><button class="btn danger" id="bDel">Delete room</button></div>` : ''}
+      ${navRow('open', 'finish', 'build', true)}`;
+  } else {
+    const probs = bProblems(), ok = A.rooms ? [...A.rooms.values()].filter((x) => x.pts) : [], area = ok.reduce((t, x) => t + x.area, 0);
+    const doors = DRAW.ops.filter((x) => x.t !== 'window' && x.t !== 'gap').length, wins = DRAW.ops.filter((x) => x.t === 'window').length;
+    h = `<div class="ptitle">Build the house</div>
+      <label class="field" style="margin-top:12px">Name<input id="bName" value="${esc(DRAW.name)}" maxlength="60"></label>
+      <div class="cap">Heights (cm)</div>
+      <div class="dims two"><label class="field">Ceiling${numIn('bHc', cm(DRAW.ceiling), 210, 500)}</label><label class="field">Doors${numIn('bHd', cm(DRAW.doorH), 180, 400)}</label>
+        <label class="field">Window sills${numIn('bHs', cm(DRAW.sill), 0, 200)}</label><label class="field">Top of windows${numIn('bHw', cm(DRAW.winTop), 100, 500)}</label></div>
+      <div class="note info">${ok.length} room${ok.length === 1 ? '' : 's'}${area ? ` · ≈ ${area.toFixed(1)} m²` : ''} · ${DRAW.walls.filter((x) => !x.line).length} walls · ${doors} door${doors === 1 ? '' : 's'} · ${wins} window${wins === 1 ? '' : 's'}</div>
+      ${probs.map((p) => `<div class="note ${p.block ? 'clash' : 'info'}">${esc(p.text)}</div>`).join('')}
+      <button class="btn primary block" id="bBuild" style="margin-top:16px"${probs.some((p) => p.block) ? ' disabled' : ''}>${DRAW.id ? 'Update the house' : 'Build the house'}</button>
+      <p class="muted small bp">You can change the drawing later from the house menu (Edit this house’s drawing). Furniture you have placed stays where it is.</p>
+      ${navRow('rooms', null, '', true)}`;
+  }
+  P.innerHTML = h;
+  // wiring
+  $$('[data-go]', P).forEach((b) => (b.onclick = () => bStep(b.dataset.go)));
+  const on = (id, ev, fn) => { const el = $('#' + id); if (el) el[ev] = fn; };
+  const num = (id) => parseFloat($('#' + id).value);
+  on('bPick', 'onclick', () => $('#filePlan').click());
+  on('bTurnL', 'onclick', () => bTurn(-1));
+  on('bTurnR', 'onclick', () => bTurn(1));
+  on('bGrid', 'onclick', bUseGrid);
+  on('bReset', 'onclick', (e) => {
+    const b = e.currentTarget;
+    if (!b.classList.contains('sure')) { b.classList.add('sure'); b.textContent = 'Sure? Click again to empty the drawing'; return; }
+    const id = DRAW.id; DRAW = newDrawing(); DRAW.id = id; BLD.img = null; BLD.imgKey = null; BLD.sel = null; BLD.chain = null;
+    bFit(); bChange();
+  });
+  on('bScaleCm', 'oninput', () => { const v = num('bScaleCm'); DRAW.scale.cm = v > 0 ? v : null; BLD.ver++; const n = $('#bScaleNote'); if (n) { n.textContent = bScaleNote(); n.className = 'note ' + (bPpm() ? 'info' : 'clash'); } bRender(); });
+  on('bScaleCm', 'onchange', () => bChange());
+  $$('[data-btool]', P).forEach((b) => (b.onclick = () => bTool(b.dataset.btool)));
+  on('bT', 'onchange', () => { const v = num('bT'); if (v > 0) DRAW.t = clamp(v, 2, 100) / 100; bChange(); });
+  $$('[data-t]', P).forEach((b) => (b.onclick = () => { DRAW.t = +b.dataset.t / 100; bChange(); }));
+  if (w) {
+    on('bWL', 'onchange', () => {
+      const v = num('bWL'); if (!(v > 0)) return;
+      const old = w.b.slice(), u = bDir(w), L = (v / 100) * k, nb = [w.a[0] + u[0] * L, w.a[1] + u[1] * L];
+      for (const x of DRAW.walls) for (const key of ['a', 'b']) if (bSame(x[key], old)) x[key] = nb.slice();
+      for (const x of DRAW.ops) if (x.wall === w.id) { x.p1 = Math.min(x.p1, L); x.p0 = Math.min(x.p0, x.p1 - 1); }
+      bChange();
+    });
+    on('bWT', 'onchange', () => { const v = num('bWT'); if (v > 0) w.t = clamp(v, 2, 100) / 100; bChange(); });
+    on('bWLow', 'onchange', (e) => { if (e.target.checked) w.h = 1; else delete w.h; bChange(); });
+    on('bWH', 'onchange', () => { const v = num('bWH'); if (v > 0) w.h = clamp(v, 10, 400) / 100; bChange(); });
+    on('bWLine', 'onchange', (e) => { if (e.target.checked) { w.line = true; delete w.h; DRAW.ops = DRAW.ops.filter((x) => x.wall !== w.id); } else delete w.line; bChange(); });
+  }
+  $$('[data-op]', P).forEach((b) => (b.onclick = () => { DRAW.op = b.dataset.op; bChange(); }));
+  if (o) {
+    const ow = wallOf(o.wall), Lw = ow ? bDist(ow.a, ow.b) : 0;
+    on('bOT', 'onchange', (e) => { o.t = e.target.value; bChange(); });
+    on('bOW', 'onchange', () => { const v = num('bOW'); if (v > 0) { o.p1 = r1(Math.min(Lw, o.p0 + (v / 100) * k)); o.p0 = r1(Math.max(0, Math.min(o.p0, o.p1 - (v / 100) * k))); } bChange(); });
+    on('bOP', 'onchange', () => { const v = num('bOP'); if (v >= 0) { const wd = o.p1 - o.p0; o.p0 = r1(clamp((v / 100) * k, 0, Lw - wd)); o.p1 = r1(o.p0 + wd); } bChange(); });
+    on('bOY0', 'onchange', () => { const v = num('bOY0'); if (v >= 0) o.y0 = clamp(v, 0, 300) / 100; bChange(); });
+    on('bOY1', 'onchange', () => { const v = num('bOY1'); if (v > 0) o.y1 = clamp(v, 30, 500) / 100; bChange(); });
+    on('bOH', 'onchange', () => { const v = num('bOH'); if (v > 0) o.h = clamp(v, 150, 500) / 100; bChange(); });
+    on('bOHinge', 'onclick', () => { o.hinge = o.hinge ? 0 : 1; bChange(); });
+    on('bOSwing', 'onclick', () => { o.swing = -(o.swing || 1); bChange(); });
+    on('bOFront', 'onchange', (e) => { o.front = e.target.checked; bChange(); });
+  }
+  $$('[data-broom]', P).forEach((el) => { el.onclick = () => { BLD.sel = { room: el.dataset.broom }; bPanel(); bRender(); }; el.onkeydown = (e) => { if (e.key === 'Enter') el.onclick(); }; });
+  if (r) {
+    on('bRoomName', 'oninput', (e) => { r.name = e.target.value; bRender(); });
+    on('bRoomName', 'onchange', (e) => { r.name = e.target.value.trim() || 'Room'; if (!r.matSet) r.mat = wetRoom(r.name) ? 'tile' : /balcon|balkon/i.test(r.name) ? 'concrete' : 'oak'; bChange(); });
+    on('bRoomMat', 'onchange', (e) => { r.mat = e.target.value; r.matSet = true; bChange(); });
+    on('bAddPh', 'onclick', () => addPhotos(DRAW.id || '__draft', r.id, () => bPanel()));
+    $$('[data-bph]', P).forEach((b) => (b.onclick = () => openPhotos(DRAW.id || '__draft', r.id, +b.dataset.bph, r.name)));
+    fillThumbs(P);
+  }
+  on('bDel', 'onclick', bDeleteSel);
+  on('bName', 'onchange', (e) => { DRAW.name = e.target.value.trim() || 'My house'; bChange(); });
+  for (const [id, key, lo, hi] of [['bHc', 'ceiling', 210, 500], ['bHd', 'doorH', 180, 400], ['bHs', 'sill', 0, 200], ['bHw', 'winTop', 100, 500]]) on(id, 'onchange', () => { const v = num(id); if (v >= 0) DRAW[key] = clamp(v, lo, hi) / 100; bChange(); });
+  on('bBuild', 'onclick', bBuild);
+}
+function bScaleNote() {
+  const sc = DRAW.scale && DRAW.scale.b, k = bPpm();
+  if (!sc) return BLD.sc ? 'Now click the other end.' : 'Click the first end of the length on the plan.';
+  if (!k) return 'Type the real length of the orange line.';
+  return `1 m is ${k.toFixed(1)} px on the picture, so all of it is ${(DRAW.iw / k).toFixed(1)} × ${(DRAW.ih / k).toFixed(1)} m.`;
+}
+$$('#bSteps button').forEach((b) => (b.onclick = () => bStep(b.dataset.bstep)));
+$('#bClose').onclick = () => bClose(false);
+$('#bUndo').onclick = bUndo;
+$('#bRedo').onclick = bRedo;
+$('#bZoomIn').onclick = () => bZoomAt([bcv.clientWidth / 2, bcv.clientHeight / 2], 1.3);
+$('#bZoomOut').onclick = () => bZoomAt([bcv.clientWidth / 2, bcv.clientHeight / 2], 1 / 1.3);
+$('#bZoomFit').onclick = () => { bFit(); bRender(); };
+$('#filePlan').onchange = (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) bSetPicture(f); };
+// a picture dropped on the builder: photos for the selected room, otherwise the floor plan
+function builderDrop(files) {
+  const imgs = files.filter((f) => /^image\//.test(f.type) || /\.(jpe?g|png|webp|heic|gif|bmp)$/i.test(f.name));
+  if (BLD.step === 'rooms' && BLD.sel && BLD.sel.room) { takePhotos({ hid: DRAW.id || '__draft', rid: BLD.sel.room, after: () => bPanel() }, imgs); return; }
+  bSetPicture(imgs[0] || files[0]);
+}
+resolvePlan();
 
 /* ---------- importing models ---------- */
 let pendingImport = null;
@@ -3874,10 +5213,10 @@ $('#impOk').onclick = () => {
 };
 $('#importModal').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#impOk').click(); if (e.key === 'Escape') $('#impCancel').click(); });
 let dragDepth = 0;
-window.addEventListener('dragenter', (e) => { if (e.dataTransfer?.types?.includes('Files')) { dragDepth++; $('#drop').hidden = false; } });
+window.addEventListener('dragenter', (e) => { if (e.dataTransfer?.types?.includes('Files')) { dragDepth++; $('#drop').textContent = BLD.open ? 'Drop a picture of the floor plan, or photos of the selected room' : 'Drop a 3D model to import it'; $('#drop').hidden = false; } });
 window.addEventListener('dragleave', () => { dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) $('#drop').hidden = true; });
 window.addEventListener('dragover', (e) => e.preventDefault());
-window.addEventListener('drop', (e) => { e.preventDefault(); dragDepth = 0; $('#drop').hidden = true; const files = [...(e.dataTransfer?.files || [])]; if (files.length) importFiles(files); });
+window.addEventListener('drop', (e) => { e.preventDefault(); dragDepth = 0; $('#drop').hidden = true; const files = [...(e.dataTransfer?.files || [])]; if (files.length) (BLD.open ? builderDrop(files) : importFiles(files)); });
 
 /* ---------- wiring and start ---------- */
 $$('#viewSeg button').forEach((b) => (b.onclick = () => setView(b.dataset.view)));
