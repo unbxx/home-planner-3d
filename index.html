@@ -318,6 +318,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
       <button data-view="walk" title="Walk through at eye height (3)">Walk</button>
     </div>
     <div class="tools panel" id="lookBox"><button id="btnLook" title="Look around by moving the mouse, without dragging (L). Esc stops."><svg class="i" viewBox="0 0 16 16"><path d="M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/></svg><span class="lbltxt">Look around</span></button></div>
+    <div class="tools panel" id="ceilBox"><button id="btnCeil" title="Show the ceilings. You see them when you look up from inside a room, such as through the cutaway; from above they stay out of the way (C)"><svg class="i" viewBox="0 0 16 16"><path d="M1.5 4h13"/><path d="M3.5 4v9.5M12.5 4v9.5"/><path d="M8 4v3"/><circle cx="8" cy="8.5" r="1.5"/></svg><span class="lbltxt">Ceiling</span></button></div>
     <div class="seg panel" id="wallSeg" role="group" aria-label="Walls">
       <button data-walls="up" title="All walls full height">Walls up</button>
       <button data-walls="cut" title="Lower the outside walls that face you">Cutaway</button>
@@ -537,7 +538,7 @@ let toastTimer;
 function toast(msg, ms = 2600) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), ms); }
 
 /* ---------- state ---------- */
-const DEFAULT_SETTINGS = { ceiling: HOUSE.ceiling, eye: 1.62, overlay: 0, wallSnap: true, grid: 0, rotStep: 15, doors: true, labels: true, clear: true, shadows: true, clashOutline: true, walls: 'cut', view: 'orbit', side: true };
+const DEFAULT_SETTINGS = { ceilings: false, ceiling: HOUSE.ceiling, eye: 1.62, overlay: 0, wallSnap: true, grid: 0, rotStep: 15, doors: true, labels: true, clear: true, shadows: true, clashOutline: true, walls: 'cut', view: 'orbit', side: true };
 const state = { items: [], measures: [], paint: {}, floors: {}, splash: {}, doorCfg: {}, doorOpen: {}, selected: null, tool: null, settings: { ...DEFAULT_SETTINGS } };
 const memStore = new Map(); // each house's layout this session, for browsers that do not let pages store anything
 function loadState() {
@@ -697,6 +698,10 @@ function std(color, rough = 0.85, metal = 0) {
   return matCache.get(k);
 }
 const capMat = new THREE.MeshBasicMaterial({ color: C.planWall });
+// a ceiling is lit evenly, so its colour shows flat, as a painted ceiling does from below
+const ceilMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(C.ceiling).multiplyScalar(0.94) });
+const ceilPaints = new Map();
+const ceilPaint = (c) => { if (!ceilPaints.has(c)) ceilPaints.set(c, new THREE.MeshBasicMaterial({ color: new THREE.Color(c).multiplyScalar(0.94) })); return ceilPaints.get(c); };
 const sillCapMat = new THREE.MeshStandardMaterial({ color: '#e7e5e0', roughness: 0.6 });
 const wallMat = new THREE.MeshStandardMaterial({ color: C.wall, roughness: 0.95 });
 const wallMats = [wallMat, wallMat, capMat, wallMat, wallMat, wallMat];
@@ -842,7 +847,7 @@ let obstacles = [];  // footprints used for clashes, clearances, snapping and wa
 let walkExtra = [];  // footprints that only stop the walker (open door leaves)
 let panes = [];      // window and balcony-door glass a blind can be fitted to
 let doorObjs = new Map(); // door key -> {key, label, frameKey, zone, leaves: [{pivot, H, closed, swing, yaw0, sgn, Ll}], angle, target}
-let ceilingMesh = null, overlayMesh = null;
+let ceilings = [], overlayMesh = null;
 let tagWall = null, tagOp = null; // the wall and opening the pieces being built belong to, for picking them in the editor
 const opRef = (W, o) => W.id + ':' + (o.op || o.a); // a drawn opening is named by its id, so its door style stays when it moves
 const H = () => S.ceiling;
@@ -1131,7 +1136,7 @@ const paintMat = (c, shade = 1) => {
   if (!paintMats.has(k)) paintMats.set(k, new THREE.MeshStandardMaterial({ color: new THREE.Color(c).multiplyScalar(shade), roughness: 0.93 }));
   return paintMats.get(k);
 };
-const AREA_KINDS = new Set(['wall', 'reveal', 'column', 'beam', 'closet', 'splash', 'worktop']);
+const AREA_KINDS = new Set(['wall', 'reveal', 'column', 'beam', 'closet', 'splash', 'worktop', 'ceiling']);
 // w × h is one slab in metres; the picture is mirrored at every joint
 const FINISHES = {
   marble: { name: 'Grey marble', url: FIN_URLS.marble, w: 1.2, h: 1.2, rough: 0.22 },
@@ -1164,7 +1169,7 @@ function applyPaint() {
   for (const srf of surfaces.values()) {
     const k = paintKey(srf.key);
     const col = paintHover && paintHover.keys.has(k) ? paintBrush : state.paint[k];
-    for (const [mesh, gi, base, shade] of srf.faces) mesh.material[gi] = col ? surfaceMat(col, shade) : base;
+    for (const [mesh, gi, base, shade] of srf.faces) mesh.material[gi] = col ? (srf.kind === 'ceiling' && col[0] === '#' ? ceilPaint(col) : surfaceMat(col, shade)) : base;
   }
   invalidate();
 }
@@ -1386,12 +1391,21 @@ function buildHouse() {
     if (!f.decor) obstacles.push({ obb: { cx: (f.x0 + f.x1) / 2, cz: (f.z0 + f.z1) / 2, ax: [1, 0], az: [0, 1], hx: (f.x1 - f.x0) / 2, hz: (f.z1 - f.z0) / 2 }, y0, y1, kind: wallLike ? 'wall' : 'fixture', name: fixName(f), top: !!f.top || ['worktop', 'vanity', 'ledge', 'base', 'appliance', 'tall', 'wallcab'].includes(f.type) }); // a plant can stand on a tall unit or wall cabinet
   }
   const base = HOUSE.floors.find((f) => f.id === 'base');
-  ceilingMesh = new THREE.Mesh(new THREE.ShapeGeometry(polyShape(base.pts)), new THREE.MeshBasicMaterial({ color: new THREE.Color(C.ceiling).multiplyScalar(0.94) }));
-  ceilingMesh.rotation.x = Math.PI / 2;
-  ceilingMesh.scale.y = -1;
-  ceilingMesh.position.y = Hc;
-  ceilingMesh.receiveShadow = false;
-  house.add(ceilingMesh);
+  // the ceilings: one over the whole floor and one per room just under it, so each room's ceiling is painted on its own;
+  // they face down, so seen from above they are not drawn (nor clicked) and the rooms stay in view
+  ceilings = [];
+  const ceil = (pts, y, key, zone, label) => {
+    const sh = new THREE.Shape();
+    pts.forEach(([x, z], i) => (i ? sh.lineTo(x, z) : sh.moveTo(x, z)));
+    const geo = new THREE.ShapeGeometry(sh);
+    geo.addGroup(0, geo.index.count, 0);
+    const m = new THREE.Mesh(geo, [ceilMat]);
+    m.rotation.x = Math.PI / 2; m.position.y = y; m.receiveShadow = false; m.userData.ceiling = true;
+    house.add(m); ceilings.push(m);
+    addSurface(key, zone, label, m, 0, 'ceiling', polyArea(pts));
+  };
+  ceil(base.pts, Hc, 'ceil:base', HOUSE.rooms[0].id, 'Ceiling, rest of the house');
+  for (const r of HOUSE.rooms) if (r.pts) ceil(r.pts, Hc - 0.002, 'ceil:' + r.id, r.id, `Ceiling, ${r.name}`);
   buildOverlay();
   applyCaps();
   applyPaint();
@@ -1443,7 +1457,8 @@ function applyCaps() {
     }
     setCap(p, cap);
   }
-  if (ceilingMesh) ceilingMesh.visible = view === 'walk';
+  const showCeil = view === 'walk' || (view === 'orbit' && S.ceilings);
+  for (const m of ceilings) m.visible = showCeil;
 }
 
 /* ---------- floors: a design or a picture of your own, per room ---------- */
@@ -4601,7 +4616,7 @@ function renderPaintPanel() {
   rows.forEach((r) => { if (AREA_KINDS.has(r.kind)) perColour.set(r.col, (perColour.get(r.col) || 0) + r.area); });
   el.innerHTML = `
     <div class="ihead"><div class="ptitle" style="flex:1">Paint</div><button class="xbtn" id="pClose" title="Stop painting (Esc)" aria-label="Stop painting">✕</button></div>
-    <p class="muted small" style="margin:4px 0 0">Click a wall (its window reveals come along; click a reveal to paint it on its own), the kitchen back panel or worktop (click them outside Paint for their options), the column, a window or door frame, a door or a radiator. Hovering shows the colour before you click. Click a floor to choose its floor.</p>
+    <p class="muted small" style="margin:4px 0 0">Click a wall (its window reveals come along; click a reveal to paint it on its own), the kitchen back panel or worktop (click them outside Paint for their options), the column, a window or door frame, a door or a radiator. Hovering shows the colour before you click. Click a floor to choose its floor, or look up at a ceiling (in Walk, or with Ceiling on in 3D) to paint it, room by room.</p>
     <div class="pmode" role="group" aria-label="Paint"><button data-pm="wall" class="${paintRoom ? '' : 'on'}">One wall</button><button data-pm="room" class="${paintRoom ? 'on' : ''}">Whole room</button></div>
     <div class="cap">Colour</div>
     <div class="swatches">${SWATCHES.map(([n, v]) => `<button class="sw ${paintBrush === v ? 'on' : ''}" style="background:${v}" data-c="${v}" title="${n}" aria-label="${n}"></button>`).join('')}</div>
@@ -4614,7 +4629,7 @@ function renderPaintPanel() {
     <div class="brush"><span ${chipAttr(paintBrush)}></span>${paintBrush ? `${esc(colourName(paintBrush))}${paintBrush[0] === '#' ? ` <span class="muted num" style="font-weight:500">${paintBrush}</span>` : ''}` : 'Back to the original white or tiles'}</div>
     <div class="cap">Painted ${rows.length ? `<span class="num">(${rows.length})</span>` : ''}</div>
     <div class="plist">${rows.length ? rows.map((r, i) => `<div class="list-row"><span ${chipAttr(r.col)}></span><div class="grow"><div class="t">${esc(r.label)}</div><div class="s num">${esc(colourName(r.col))}${AREA_KINDS.has(r.kind) ? ` · ≈ ${r.area.toFixed(1)} m²` : ''}</div></div><button class="xbtn" data-unpaint="${i}" title="Remove this paint" aria-label="Remove this paint">✕</button></div>`).join('') : '<div class="empty" style="padding:4px">Nothing painted yet.</div>'}</div>
-    ${rows.length ? `<div class="ptotal num">${[...perColour].map(([c, a]) => `${esc(colourName(c))}: ≈ ${a.toFixed(1)} m²`).join(' · ')}${perColour.size ? '<br>' : ''}Areas are walls, back panel, worktop, column and beam without windows and doors.</div>
+    ${rows.length ? `<div class="ptotal num">${[...perColour].map(([c, a]) => `${esc(colourName(c))}: ≈ ${a.toFixed(1)} m²`).join(' · ')}${perColour.size ? '<br>' : ''}Areas are walls, ceilings, back panel, worktop, column and beam without windows and doors.</div>
     <div class="actions"><button class="btn danger" id="pClear">Remove all paint</button></div>` : ''}`;
   $('#pClose', el).onclick = () => cancelTool();
   $$('[data-pm]', el).forEach((b) => (b.onclick = () => { paintRoom = b.dataset.pm === 'room'; renderPaintPanel(); setHint(); }));
@@ -4683,7 +4698,7 @@ function setHint() {
   else if (ED.on) t = edHintText();
   else if (floorRoom) t = 'Pick a floor, or use ‹ › to go through them · Esc closes the panel';
   else if (state.tool === 'place') t = placing && PRESETS[placing.preset] && PRESETS[placing.preset].blinds ? 'Point at a window and click: the blind fits that pane · Alt: place it freely · Esc cancels' : 'Move over the floor and click to place · R rotates · Alt: no snapping · Esc cancels';
-  else if (state.tool === 'paint') t = 'Click a wall, frame, door or radiator to paint it · Shift-click: all walls of the room · Alt-click: pick up a colour · Esc stops';
+  else if (state.tool === 'paint') t = 'Click a wall, ceiling, frame, door or radiator to paint it · Shift-click: all walls of the room · Alt-click: pick up a colour · Esc stops';
   else if (state.tool === 'measure') t = msStart ? 'Click the second point · Esc cancels' : 'Click two points to measure · snaps to wall corners · Alt: no snapping';
   else if (state.selected) t = 'Drag to move · R / Shift+R rotate · arrows nudge 1 cm (Shift: 10 cm) · Ctrl/⌘+D duplicate · Del removes';
   else if (S.view === 'walk') t = 'W A S D or arrows to walk · drag to look around, or L to look with the mouse alone · click a piece, then drag it to move it · E opens a door';
@@ -4703,6 +4718,7 @@ function setView(v) {
   $$('#viewSeg button').forEach((b) => b.classList.toggle('on', b.dataset.view === v));
   $('#wallSeg').style.display = v === 'orbit' ? '' : 'none';
   $('#lookBox').style.display = v === 'walk' ? '' : 'none';
+  $('#ceilBox').style.display = v === 'orbit' ? '' : 'none';
   orbit.enabled = v === 'orbit';
   planCtl.enabled = v === 'plan';
   walk.keys.clear();
@@ -4713,6 +4729,12 @@ function setView(v) {
   state.items.forEach(styleItem);
   applyCaps(); updateRoomLabels(); setHint(); resize(); save();
   if (ED.on) edOverlay();
+}
+function setCeilings(on) {
+  S.ceilings = on;
+  $('#btnCeil').classList.toggle('on', on);
+  applyCaps(); save(); invalidate();
+  if (on) toast('Ceilings on: lower the view into a room, or look through the cutaway, to see them from below.', 4000);
 }
 function setWalls(m) {
   S.walls = m;
@@ -4974,6 +4996,7 @@ window.addEventListener('keydown', (e) => {
   if (mod || e.altKey) walk.keys.clear();
   if (LOOK.on && k === 'escape') { stopLook(); return; }
   if (!mod && k === 'l') { toggleLook(); return; }
+  if (!mod && k === 'c') { setCeilings(!S.ceilings); return; }
   if (floorRoom && k === 'escape') { closeFloorPanel(); return; }
   if (ED.on && edKey(e)) return;
   if (!mod && k === 'b' && !ED.on) { edStart(); return; }
@@ -7534,6 +7557,8 @@ $('#btnPaint').onclick = togglePaint;
 $('#btnUndo').onclick = () => (ED.on ? edUndo() : undo());
 $('#btnRedo').onclick = () => (ED.on ? edRedo() : redo());
 $('#btnEdit').onclick = () => (ED.on ? edClose() : edStart());
+$('#btnCeil').onclick = () => setCeilings(!S.ceilings);
+$('#btnCeil').classList.toggle('on', !!S.ceilings);
 
 const clock = new THREE.Clock();
 function frame() {

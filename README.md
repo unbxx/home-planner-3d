@@ -24,7 +24,8 @@ Everything you do is saved in your own browser, per house. Nothing is uploaded a
 - **Furniture**: sofas, beds, tables, chairs, storage, rugs, plants, lamps, shelves, wall art and more. Small things rest on what they are put on (a worktop, a shelf, a sofa seat), and *On a shelf of …* puts them on a chosen shelf of a bookcase or rack.
 - **Your own models**: *Import 3D model* (GLB works best; GLTF, OBJ, STL and FBX too). You type the real size from the product page and the model is scaled to exactly that.
 - **Checking the fit**: a red outline when a piece runs into a wall or another piece, the free space around the selected piece, and a measuring tool.
-- **Paint**: any wall, the window reveals, frames, doors and radiators, with the wall area per colour to work out how much paint to buy.
+- **Paint**: any wall, each room's ceiling, the window reveals, frames, doors and radiators, with the area per colour to work out how much paint to buy.
+- **Ceilings**: always there in Walk view (look up, and click one with Paint). In 3D, **Ceiling** (C) shows them when you look up from inside a room or through the cutaway; from above they stay out of the way.
 - **Several houses**: switch between them from the house name at the top left; each keeps its own furniture and paint.
 - **Room photos**: under *Rooms*, *+ Photos* keeps photos of each room next to it, to look back at while you furnish.
 
