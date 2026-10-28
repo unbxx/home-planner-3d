@@ -240,6 +240,11 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .crosshair::after { left: 0; top: 8px; width: 18px; height: 2px; }
 @media (pointer: coarse) { #lookBox { display: none !important; } }
 
+/* Claude connected */
+.claude-on { padding: 6px 12px; font-size: 13px; font-weight: 550; gap: 7px; }
+.claude-on .cdot { width: 8px; height: 8px; border-radius: 50%; background: #2f9e66; box-shadow: 0 0 0 3px rgba(47,158,102,.18); }
+#claudeBox[hidden] { display: none; }
+
 @media (max-width: 860px) {
   .bside { top: auto; height: 44%; width: auto; right: var(--space-3); }
   .bhint, .bhead .brand { display: none; }
@@ -293,6 +298,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
       <button id="btnRedo" class="icon" title="Redo (Ctrl/⌘+Shift+Z)" aria-label="Redo"><svg class="i" viewBox="0 0 16 16"><path d="M10.5 3l3 3-3 3"/><path d="M13.5 6h-7a4 4 0 0 0 0 8H9"/></svg></button>
     </div>
     <div class="spacer"></div>
+    <div class="tools panel claude-on" id="claudeBox" hidden title="Claude can change and furnish this home: the planner's connector is running on this computer"><span class="cdot"></span>Claude</div>
     <div class="tools panel">
       <button id="btnSettings" class="icon" title="Settings" aria-label="Settings"><svg class="i" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"/></svg></button>
       <button id="btnFile" title="Export, open or reset the layout"><svg class="i" viewBox="0 0 16 16"><path d="M4 1.5h5.5L13 5v9.5H4z"/><path d="M9.5 1.5V5H13"/></svg><span class="lbltxt">File</span></button>
@@ -533,6 +539,7 @@ loadState();
 function houseDefaults() {
   state.flags = state.flags || {};
   if (!state.flags.marbleSplash) { state.flags.marbleSplash = true; for (const [k, v] of Object.entries((HOUSE.defaults && HOUSE.defaults.paint) || {})) if (!state.paint[k]) state.paint[k] = v; }
+  if (!state.flags.floorDefaults) { state.flags.floorDefaults = true; state.floors = state.floors || {}; for (const [k, v] of Object.entries((HOUSE.defaults && HOUSE.defaults.floors) || {})) if (!state.floors[k]) state.floors[k] = v; }
 }
 houseDefaults();
 const S = state.settings;
@@ -5046,17 +5053,9 @@ $('#fileMenu').onclick = async (e) => {
   const act = e.target.closest('[data-act]')?.dataset.act; if (!act) return;
   closeMenus();
   if (act === 'export') {
-    const models = {};
-    for (const it of state.items) if (it.kind === 'model' && !models[it.model]) {
-      const rec = await getModel(it.model);
-      if (rec) models[it.model] = { name: rec.name, main: rec.main, files: rec.files.map((f) => ({ name: f.name, data: b64(f.data) })) };
-    }
-    const media = {};
-    for (const f of Object.values(state.floors || {})) if (f.img && !media[f.img]) { const rec = await getModel(f.img); if (rec && rec.blob) media[f.img] = await blobToData(rec.blob); }
-    // the house goes along, so the file opens as the whole home in any browser, also one that does not have the house yet
-    const out = { app: 'home-planner', version: 1, house: HOUSE.id, saved: new Date().toISOString(), settings: S, items: JSON.parse(snapshot()).items, paint: state.paint, floors: state.floors, splash: state.splash, doorCfg: state.doorCfg, doorOpen: state.doorOpen, measures: state.measures, models, media, home: await houseFile() };
+    const out = await homeFile();
     download(`${HOUSE.id}-home-${new Date().toISOString().slice(0, 10)}.json`, new Blob([JSON.stringify(out)], { type: 'application/json' }));
-    const n = Object.keys(models).length;
+    const n = Object.keys(out.models).length;
     toast(`Home exported: the house, its furniture, paint and floors${n ? ` and ${n} imported model${n === 1 ? '' : 's'}` : ''}. Open it with File → Open.`, 4500);
   } else if (act === 'open') $('#fileLayout').click();
   else if (act === 'shot') {
@@ -5078,6 +5077,17 @@ async function houseFile() {
   if (Object.keys(media).length) geometry.media = media;
   return geometry;
 }
+// the whole home as one file: the house, and the furniture, paint, floors and imported models in it; the house goes along,
+// so the file opens as the whole home in any browser, also one that does not have the house yet
+async function homeFile() {
+  const models = {}, media = {};
+  for (const it of state.items) if (it.kind === 'model' && !models[it.model]) {
+    const rec = await getModel(it.model);
+    if (rec) models[it.model] = { name: rec.name, main: rec.main, files: rec.files.map((f) => ({ name: f.name, data: b64(f.data) })) };
+  }
+  for (const f of Object.values(state.floors || {})) if (f.img && !media[f.img]) { const rec = await getModel(f.img); if (rec && rec.blob) media[f.img] = await blobToData(rec.blob); }
+  return { app: 'home-planner', version: 1, house: HOUSE.id, saved: new Date().toISOString(), settings: S, items: JSON.parse(snapshot()).items, paint: state.paint, floors: state.floors, splash: state.splash, doorCfg: state.doorCfg, doorOpen: state.doorOpen, measures: state.measures, models, media, home: await houseFile() };
+}
 async function addHouseFile(raw, fileName) {
   if (!raw.name) raw.name = fileName.replace(/\.json$/i, '').replace(/[_-]+/g, ' ');
   const { media, photos, ...geometry } = raw, h = normalizeHouse(geometry);
@@ -5088,9 +5098,11 @@ async function addHouseFile(raw, fileName) {
   return h;
 }
 // File → Open and Import a house take any file this planner writes, from this copy or another one: a whole home, a house, or a layout on its own
-async function openHomeFile(f) {
+const openHomeFile = async (f) => openHomeText(await f.text(), f.name);
+async function openHomeText(text, fileName) {
+  const f = { name: fileName };
   let data;
-  try { data = JSON.parse(await f.text()); } catch (err) { toast('This file could not be read. Choose a .json file exported from this planner.', 4000); return; }
+  try { data = JSON.parse(text); } catch (err) { toast('This file could not be read. Choose a .json file exported from this planner.', 4000); return; }
   const layout = data && Array.isArray(data.items) && (!data.app || /planner/i.test(data.app)), houseOnly = data && !layout && Array.isArray(data.walls) && Array.isArray(data.floors);
   if (!layout && !houseOnly) { toast('This file is not a home, house or layout from this planner.', 4000); return; }
   try {
@@ -6583,12 +6595,13 @@ function houseToDraft(H) {
   const walls = [], ops = [];
   const kindOf = (o) => (o.t === 'window' ? 'window' : o.t === 'gap' ? 'gap' : o.glazed ? 'glass' : o.leaves === 2 ? 'double' : 'door');
   const addOps = (W, startAlong) => {
-    for (const o of (W.open || []).slice().sort((p, q) => p.a - q.a)) {
-      const op = { id: 'o' + uid(), wall: W.id, t: kindOf(o), p0: r1((o.a - startAlong) * k), p1: r1((o.b - startAlong) * k), hinge: o.hinge === 'b' ? 1 : 0, swing: o.swing || 1 };
+    // ids from the wall and the order along it, so the same house always gives the same ids (Claude's connector reads them before any change)
+    (W.open || []).slice().sort((p, q) => p.a - q.a).forEach((o, i) => {
+      const op = { id: 'o' + W.id.replace(/\W/g, '') + '_' + i, wall: W.id, t: kindOf(o), p0: r1((o.a - startAlong) * k), p1: r1((o.b - startAlong) * k), hinge: o.hinge === 'b' ? 1 : 0, swing: o.swing || 1 };
       for (const key of ['front', 'closed', 'y0', 'y1', 'h']) if (o[key] !== undefined) op[key] = o[key];
       ops.push(op);
       ED.keyMap.set(op.id, `${W.id}:${o.op || o.a}`);
-    }
+    });
   };
   for (const s of segs) {
     const w = { id: s.W.id, a: P(s.A), b: P(s.B), t: r3(s.t) };
@@ -7508,6 +7521,403 @@ window.addEventListener('dragenter', (e) => { if (e.dataTransfer?.types?.include
 window.addEventListener('dragleave', () => { dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) $('#drop').hidden = true; });
 window.addEventListener('dragover', (e) => e.preventDefault());
 window.addEventListener('drop', (e) => { e.preventDefault(); dragDepth = 0; $('#drop').hidden = true; const files = [...(e.dataTransfer?.files || [])]; if (!files.length) return; const json = !BLD.open && files.find((f) => /\.json$/i.test(f.name)); if (json) openHomeFile(json); else (BLD.open ? builderDrop(files) : importFiles(files)); });
+
+/* ---------- the Claude connector: when the planner's connector serves this page, Claude's tools run here ---------- */
+// The connector is a small program on the user's own computer, started by Claude Desktop or Claude Code. It serves this page on 127.0.0.1,
+// passes each of Claude's tool calls on as an event, and gets the answer back by a POST. Nothing leaves the computer.
+// Sizes in the tools are centimetres; x runs east and z south from the inside north-west corner, as everywhere in the planner.
+const CONN = { token: (document.querySelector('meta[name="planner-connector"]') || {}).content || null, log: [], houseUndo: [] };
+const cmOf = (m) => Math.round(m * 1000) / 10;
+const kOf = (D) => bDist(D.scale.a, D.scale.b) / (D.scale.cm / 100);
+const compass = ([x, z]) => (Math.abs(z) >= Math.abs(x) ? (z > 0 ? 'south' : 'north') : x > 0 ? 'east' : 'west');
+const DIRS = { north: [0, -1], south: [0, 1], east: [1, 0], west: [-1, 0] };
+const FACING = { south: 0, west: 90, north: 180, east: 270 };
+const YOURS_LABEL = 'Collection';
+// the house's drawing as the editor would use it, made from its walls if it has none, without opening the editor
+function draftNow() {
+  if (ED.on) return DRAW;
+  const keep = DRAW, keepMap = ED.keyMap;
+  ED.keyMap = new Map();
+  DRAW = HOUSE.draft ? JSON.parse(JSON.stringify(loadDrawing(HOUSE.id) || HOUSE.draft)) : houseToDraft(HOUSE);
+  BLD.ver++;
+  if (!DRAW.origin) { const A = bAnalyse(); if (A.base) DRAW.origin = bOrigin(A); }
+  const D = DRAW;
+  DRAW = keep; ED.keyMap = keepMap; BLD.ver++;
+  return D;
+}
+const cmPoint = (D, p) => { const k = kOf(D), o = D.origin || [0, 0]; return [cmOf(p[0] / k - o[0]), cmOf(p[1] / k - o[1])]; };
+function opInfo(D, w, o) {
+  const k = kOf(D), s0 = Math.min(o.p0, o.p1) / k, s1 = Math.max(o.p0, o.p1) / k, u = bDir(w), mid = [w.a[0] + u[0] * ((s0 + s1) / 2) * k, w.a[1] + u[1] * ((s0 + s1) / 2) * k];
+  const i = { id: o.id, kind: o.t, width_cm: cmOf(s1 - s0), from_start_cm: cmOf(s0), centre_cm: cmPoint(D, mid) };
+  if (o.t === 'window') { i.sill_cm = cmOf(o.y0 ?? HOUSE.sill); i.top_cm = cmOf(o.y1 ?? HOUSE.winTop); } else i.height_cm = cmOf(o.h ?? HOUSE.doorH);
+  if (o.t !== 'window' && o.t !== 'gap') { i.hinge = o.hinge ? 'end' : 'start'; const n = bNormal(w); i.opens_to = compass([n[0] * (o.swing || 1), n[1] * (o.swing || 1)]); if (o.front) i.front_door = true; }
+  return i;
+}
+function connHome() {
+  const D = draftNow(), k = kOf(D);
+  const walls = D.walls.map((w) => {
+    const W = HOUSE.walls.find((x) => x.id === w.id), out = { id: w.id, from_cm: cmPoint(D, w.a), to_cm: cmPoint(D, w.b), length_cm: cmOf(bDist(w.a, w.b) / k), thickness_cm: cmOf(w.t) };
+    if (w.line) out.divider_only = true;
+    if (w.h) out.low_height_cm = cmOf(w.h);
+    if (W && W.ext) out.outside = true;
+    const ops = D.ops.filter((o) => o.wall === w.id);
+    if (ops.length) out.openings = ops.map((o) => opInfo(D, w, o));
+    return out;
+  });
+  const rooms = HOUSE.rooms.map((r) => (r.pts
+    ? { id: r.id, name: r.name, area_m2: +polyArea(r.pts).toFixed(2), outline_cm: r.pts.map(([x, z]) => [cmOf(x), cmOf(z)]), floor: floorName(r.id), ceiling_paint: state.paint['ceil:' + r.id] || null }
+    : { id: r.id, name: r.name, part_of: HOUSE.rooms[0].name }));
+  const parts = HOUSE.fixtures.map((f) => ({ id: f.id, type: f.type, label: f.label || fixName(f).replace(/^(the|a) /, ''), box_cm: [cmOf(f.x0), cmOf(f.z0), cmOf(f.x1), cmOf(f.z1)], bottom_cm: cmOf(yval(f.y0)), top_cm: f.y1 === 'H' ? 'ceiling' : cmOf(yval(f.y1)) }));
+  const furniture = state.items.map((it) => ({ id: it.id, name: it.name, ...(it.kind === 'preset' ? { preset: it.preset } : { imported_model: true }), centre_cm: [cmOf(it.x), cmOf(it.z)], above_floor_cm: cmOf(it.y || 0), size_cm: [cmOf(it.w), cmOf(it.d), cmOf(it.h)], rot_deg: Math.round(it.rot || 0), color: it.color, ...(it.o && Object.keys(it.o).length ? { options: it.o } : {}), ...(it._clash ? { overlaps: it._clash } : {}) }));
+  const paint = Object.entries(state.paint).map(([key, color]) => ({ surface: (surfaces.get(key) || { label: key }).label, color }));
+  return {
+    house: { id: HOUSE.id, name: HOUSE.name, sub: HOUSE.sub || '', ceiling_cm: cmOf(S.ceiling), door_height_cm: cmOf(HOUSE.doorH), drawn: !!HOUSE.draft },
+    conventions: 'cm; x runs east and z south from the inside north-west corner. Walls are given along their middle. A piece of furniture faces south at rot_deg 0 (90 west, 180 north, 270 east); size_cm is width, depth, height.',
+    rooms, walls, parts, furniture, paint, floors: state.floors || {}, view: S.view,
+  };
+}
+function connCatalog(cat) {
+  const label = (c) => (c === 'Yours' ? YOURS_LABEL : c === 'House' ? 'Parts of the house' : c === 'Wall' ? 'On the wall' : c);
+  return Object.values(PRESETS).filter((p) => !cat || label(p.cat).toLowerCase().includes(String(cat).toLowerCase()) || p.cat.toLowerCase() === String(cat).toLowerCase()).map((p) => ({
+    preset: p.key, name: p.name, category: label(p.cat), size_cm: [cmOf(p.w), cmOf(p.d), cmOf(p.h)], ...(p.note ? { note: p.note } : {}), ...(p.y ? { default_above_floor_cm: cmOf(p.y) } : {}), color: p.color, ...(p.colorLabel ? { color_is: p.colorLabel } : {}),
+    ...(p.stack ? { rests_on_furniture: true } : {}), ...(p.hang ? { hangs_from_ceiling: true } : {}),
+    ...(p.opts ? { options: p.opts.map((o) => ({ key: o.k, label: o.label, type: o.type, ...(o.choices ? { choices: Object.keys(o.choices) } : {}), default: typeof o.def === 'function' ? undefined : o.def })) } : {}),
+  }));
+}
+
+/* changing the house: the same steps as the editor's, applied to its drawing */
+function connSnap(p) {
+  const tol = 0.05 * edK();
+  let best = null, bd = tol;
+  for (const w of DRAW.walls) for (const key of ['a', 'b']) { const d = bDist(p, w[key]); if (d < bd) { bd = d; best = w[key].slice(); } }
+  if (best) return best;
+  for (const w of DRAW.walls) { const r = bProj(p, w.a, w.b); if (r.t > 0 && r.t < 1 && bDist(p, r.q) < tol) return r.q.map(r1); }
+  return p.map(r1);
+}
+const pxAt = (cm) => toPx([cm[0] / 100, cm[1] / 100]);
+function wallBy(id) { const w = wallOf(id); if (!w) throw new Error(`there is no wall "${id}"; get_home lists them`); return w; }
+function opBy(id) { const o = opOf(id); if (!o) throw new Error(`there is no door or window "${id}"`); return o; }
+function setOpening(o, a) {
+  const w = wallBy(o.wall), k = edK(), L = bDist(w.a, w.b);
+  if (a.kind) { if (!OP_TYPES[a.kind]) throw new Error('kind is door, double, glass, window or gap'); o.t = a.kind; }
+  let lo = Math.min(o.p0, o.p1), wd = Math.abs(o.p1 - o.p0);
+  if (a.width_cm > 0) { const nw = Math.min(L, (a.width_cm / 100) * k); lo += (wd - nw) / 2; wd = nw; }
+  if (a.from_start_cm != null) lo = (a.from_start_cm / 100) * k;
+  if (a.centre_cm) lo = clamp(bProj(pxAt(a.centre_cm), w.a, w.b).t, 0, 1) * L - wd / 2;
+  lo = clamp(lo, 0, Math.max(0, L - wd));
+  if (DRAW.ops.some((x) => x !== o && x.wall === o.wall && Math.min(x.p0, x.p1) < lo + wd - 1 && Math.max(x.p0, x.p1) > lo + 1)) throw new Error('it would overlap another door or window in that wall');
+  o.p0 = r1(lo); o.p1 = r1(lo + wd);
+  if (a.sill_cm != null) o.y0 = clamp(a.sill_cm, 0, 300) / 100;
+  if (a.top_cm != null) o.y1 = clamp(a.top_cm, 30, 500) / 100;
+  if (a.height_cm != null) o.h = clamp(a.height_cm, 150, 500) / 100;
+  if (a.hinge) o.hinge = a.hinge === 'end' ? 1 : 0;
+  if (a.opens_to && DIRS[a.opens_to]) { const n = bNormal(w), d = DIRS[a.opens_to], dot = n[0] * d[0] + n[1] * d[1]; if (Math.abs(dot) > 0.1) o.swing = dot > 0 ? 1 : -1; }
+  if (a.front_door != null) o.front = !!a.front_door;
+}
+function setPart(f, a) {
+  const box = a.box_cm || (a.centre_cm && a.size_cm ? [a.centre_cm[0] - a.size_cm[0] / 2, a.centre_cm[1] - a.size_cm[1] / 2, a.centre_cm[0] + a.size_cm[0] / 2, a.centre_cm[1] + a.size_cm[1] / 2] : null);
+  if (box) Object.assign(f, { x0: r3(Math.min(box[0], box[2]) / 100), z0: r3(Math.min(box[1], box[3]) / 100), x1: r3(Math.max(box[0], box[2]) / 100), z1: r3(Math.max(box[1], box[3]) / 100) });
+  if (a.below_ceiling_cm > 0) { f.y0 = 'H-' + (a.below_ceiling_cm / 100).toFixed(2); f.y1 = 'H'; }
+  if (a.bottom_cm != null) f.y0 = Math.max(0, a.bottom_cm) / 100;
+  if (a.top_cm != null) f.y1 = a.top_cm === 'ceiling' ? 'H' : a.top_cm / 100;
+  if (a.label) f.label = String(a.label).slice(0, 40);
+}
+function connEditOp(a) {
+  const k = edK();
+  switch (a.op) {
+    case 'move_wall': { const w = wallBy(a.wall); edMoveWall(w, (+a.by_cm || 0) / 100); return `moved wall ${w.id} ${a.by_cm} cm`; }
+    case 'set_wall': {
+      const w = wallBy(a.wall);
+      if (a.length_cm > 0) edSetLength(w, a.length_cm / 100, a.keep === 'to' ? 'b' : a.keep === 'middle' ? 'mid' : 'a');
+      if (a.thickness_cm > 0) w.t = clamp(a.thickness_cm, 2, 100) / 100;
+      if (a.low_height_cm !== undefined) { if (a.low_height_cm) w.h = clamp(a.low_height_cm, 10, 400) / 100; else delete w.h; }
+      if (a.divider_only !== undefined) { if (a.divider_only) { w.line = true; delete w.h; DRAW.ops = DRAW.ops.filter((o) => o.wall !== w.id); } else delete w.line; }
+      return `changed wall ${w.id}`;
+    }
+    case 'add_wall': {
+      if (!a.from_cm || !a.to_cm) throw new Error('add_wall needs from_cm and to_cm');
+      const w = { id: 'w' + uid(), a: connSnap(pxAt(a.from_cm)), b: connSnap(pxAt(a.to_cm)), t: clamp(a.thickness_cm || 10, 2, 100) / 100 };
+      if (bDist(w.a, w.b) < 0.05 * k) throw new Error('the wall is too short');
+      if (a.divider_only) w.line = true;
+      DRAW.walls.push(w);
+      return `added wall ${w.id}`;
+    }
+    case 'add_opening': {
+      const w = wallBy(a.wall), kind = a.kind || 'door';
+      if (w.line) throw new Error('a room divider has no doors or windows');
+      if (!OP_TYPES[kind]) throw new Error('kind is door, double, glass, window or gap');
+      const L = bDist(w.a, w.b), wd = Math.min(L, ((a.width_cm || OP_TYPES[kind][1] * 100) / 100) * k), x = bAnalyse().walls.find((y) => y.id === w.id);
+      const o = { id: 'o' + uid(), wall: w.id, t: kind, p0: r1((L - wd) / 2), p1: r1((L + wd) / 2), hinge: 0, swing: x && x.ext ? -x.ext : 1 };
+      if (x && x.ext && kind === 'door') o.front = true;
+      DRAW.ops.push(o);
+      try { setOpening(o, { ...a, kind: undefined, width_cm: undefined }); } catch (err) { DRAW.ops.pop(); throw err; }
+      ED.keyMap.set(o.id, `${w.id}:${o.id}`);
+      return `added ${OP_TYPES[kind][0].toLowerCase()} ${o.id} in wall ${w.id}`;
+    }
+    case 'set_opening': { const o = opBy(a.id); setOpening(o, a); return `changed ${o.id}`; }
+    case 'add_part': {
+      if (!PART_TYPES[a.kind]) throw new Error('kind is column, beam, closet or radiator');
+      const f = { id: 'fx' + uid(), type: a.kind, label: PART_TYPES[a.kind][0], y0: a.kind === 'beam' ? 'H-0.30' : a.kind === 'radiator' ? 0.15 : 0, y1: a.kind === 'radiator' ? 0.75 : 'H' };
+      setPart(f, a);
+      if (f.x0 === undefined) throw new Error('add_part needs box_cm, or centre_cm with size_cm');
+      (DRAW.fixtures ||= []).push(f);
+      return `added ${a.kind} ${f.id}`;
+    }
+    case 'set_part': { const f = fixOf(a.id); if (!f) throw new Error(`there is no part "${a.id}"`); setPart(f, a); return `changed ${f.id}`; }
+    case 'name_room': { const r = roomRef(a.room); if (!r) throw new Error(`there is no room "${a.room}"`); r.name = String(a.name || 'Room').slice(0, 40); return `named ${r.id} ${r.name}`; }
+    case 'add_room': {
+      if (!a.at_cm) throw new Error('add_room needs at_cm, a point inside the space');
+      const r = { id: 'r' + uid(), name: String(a.name || 'Room ' + (DRAW.rooms.length + 1)).slice(0, 40), seed: pxAt(a.at_cm), mat: 'oak' };
+      DRAW.rooms.push(r);
+      return `added room ${r.id} (${r.name})`;
+    }
+    case 'delete': {
+      const id = a.id;
+      if (wallOf(id)) { DRAW.walls = DRAW.walls.filter((w) => w.id !== id); DRAW.ops = DRAW.ops.filter((o) => o.wall !== id); }
+      else if (opOf(id)) DRAW.ops = DRAW.ops.filter((o) => o.id !== id);
+      else if (fixOf(id)) DRAW.fixtures = DRAW.fixtures.filter((f) => f.id !== id);
+      else if (roomRef(id)) { const rid = roomRef(id).id; DRAW.rooms = DRAW.rooms.filter((r) => r.id !== rid); }
+      else throw new Error(`nothing is called "${id}"`);
+      return `deleted ${id}`;
+    }
+    default: throw new Error(`unknown op "${a.op}"`);
+  }
+}
+// a room of the drawing by its id, or by its name as get_home shows it
+function roomRef(ref) {
+  const s = String(ref ?? '').toLowerCase(), h = HOUSE.rooms.find((r) => r.name.toLowerCase() === s);
+  return draftRoom(ref) || DRAW.rooms.find((r) => (r.name || '').toLowerCase() === s) || (h && draftRoom(h.id)) || null;
+}
+async function connEdit(ops) {
+  if (BLD.open) throw new Error('The floor-plan drawing is open in the planner; close it first.');
+  if (!Array.isArray(ops) || !ops.length) throw new Error('Give a list of operations.');
+  const was = ED.on, id = HOUSE.id;
+  CONN.houseUndo.push({ id, house: JSON.stringify(myHouses[id] || null) });
+  if (!was) edStart();
+  const results = ops.map((a) => { try { return connEditOp(a || {}); } catch (err) { return `✗ ${(a && a.op) || '?'}: ${err.message}`; } });
+  edApply(false);
+  const made = edAutoRooms();
+  edChange();
+  const err = ED.err;
+  if (!was) edClose();
+  CONN.log.push('house');
+  return { results, ...(made ? { new_rooms: made } : {}), ...(err ? { problem: err === 'open' ? 'The outside walls do not close, so the house keeps its last good shape. Join the walls up, or undo.' : 'The house needs walls that close.' } : {}), rooms: HOUSE.rooms.filter((r) => r.pts).map((r) => ({ id: r.id, name: r.name, area_m2: +polyArea(r.pts).toFixed(2) })) };
+}
+
+/* furniture, paint and floors */
+function applySpec(it, s) {
+  const p = PRESETS[it.preset];
+  if (s.options && p && p.opts) for (const [k, v] of Object.entries(s.options)) { const o = p.opts.find((x) => x.k === k); if (!o) continue; if (o.store !== false) it.o = { ...(it.o || {}), [k]: v }; if (o.set) o.set(it, v); }
+  if (s.size_cm) { const [w, d, h] = s.size_cm; if (w > 0) it.w = w / 100; if (d > 0) it.d = d / 100; if (h > 0) it.h = h / 100; }
+  if (s.centre_cm) { it.x = s.centre_cm[0] / 100; it.z = s.centre_cm[1] / 100; }
+  if (s.facing && FACING[s.facing] !== undefined) it.rot = FACING[s.facing];
+  if (s.rot_deg != null) it.rot = ((+s.rot_deg % 360) + 360) % 360;
+  if (s.color) it.color = s.color;
+  if (s.name) it.name = String(s.name).slice(0, 60);
+  if (s.above_floor_cm != null) { it.y = Math.max(0, s.above_floor_cm) / 100; it.stack = false; }
+  else if (s.on_furniture === true || (it.stack && s.on_furniture !== false)) { it.stack = true; it.y = supportHeight(it, it.x, it.z); }
+}
+const itemReport = (it) => ({ id: it.id, name: it.name, centre_cm: [cmOf(it.x), cmOf(it.z)], above_floor_cm: cmOf(it.y || 0), size_cm: [cmOf(it.w), cmOf(it.d), cmOf(it.h)], rot_deg: Math.round(it.rot || 0), ...(it._clash ? { overlaps: it._clash } : {}) });
+function connPlace(items) {
+  if (!Array.isArray(items) || !items.length) throw new Error('Give a list of items.');
+  const out = [];
+  for (const s of items) {
+    if (!s || !PRESETS[s.preset]) { out.push({ error: `no furniture called "${s && s.preset}"; list_furniture lists them` }); continue; }
+    const it = newPresetItem(s.preset);
+    applySpec(it, s);
+    state.items.push(it); syncItem(it); out.push(it);
+  }
+  updateClashes(); renderPlaced(); commit(); CONN.log.push('layout');
+  return out.map((x) => (x.error ? x : itemReport(x)));
+}
+function connUpdate(items) {
+  const out = [];
+  for (const s of items || []) {
+    const it = itemById(s && s.id);
+    if (!it) { out.push({ error: `nothing placed is called "${s && s.id}"` }); continue; }
+    applySpec(it, s); syncItem(it); out.push(it);
+  }
+  updateClashes(); renderPlaced(); renderInspector(); commit(); CONN.log.push('layout');
+  return out.map((x) => (x.error ? x : itemReport(x)));
+}
+function connRemove(ids) {
+  const set = new Set(ids || []), before = state.items.length;
+  state.items = state.items.filter((i) => !set.has(i.id));
+  state.items.forEach((f) => { if (set.has(f.with)) delete f.with; });
+  if (state.selected && set.has(state.selected)) select(null);
+  syncAll(); commit(); CONN.log.push('layout');
+  return `removed ${before - state.items.length} piece(s)`;
+}
+// the paint keys of a door or window frame: by its id once drawn, by its wall and place before
+function openingRef(id) {
+  for (const W of [...HOUSE.walls, ...HOUSE.diag]) {
+    const list = (W.open || []).slice().sort((p, q) => p.a - q.a);
+    const e = list.find((x) => x.op === id) || (!list.some((x) => x.op) && /_(\d+)$/.test(id) && id.startsWith('o' + W.id.replace(/\W/g, '') + '_') ? list[+id.match(/_(\d+)$/)[1]] : null);
+    if (e) return opRef(W, e);
+  }
+  return null;
+}
+function connPaint(a) {
+  const col = a.color === null || a.color === 'none' ? null : String(a.color || '');
+  if (col !== null && !/^#[0-9a-f]{6}$/i.test(col) && !(col.startsWith('tex:') && FINISHES[col.slice(4)])) throw new Error(`color is "#rrggbb"${Object.keys(FINISHES).length ? ', ' + Object.keys(FINISHES).map((k) => 'tex:' + k).join(', ') : ''} or null to remove`);
+  const room = a.room && HOUSE.rooms.find((r) => r.id === a.room || r.name.toLowerCase() === String(a.room).toLowerCase());
+  const zones = room ? new Set([room.id, ...(room.zones || []).map((z) => z.id)]) : null;
+  let keys = [];
+  if (a.target === 'walls') { if (!room) throw new Error('say which room'); for (const s of surfaces.values()) if ((s.kind === 'wall' || s.kind === 'reveal') && zones.has(s.zone)) keys.push(s.key); }
+  else if (a.target === 'wall') {
+    if (!room || !a.wall) throw new Error('give the room and the wall id');
+    const s = [...surfaces.values()].find((x) => x.kind === 'wall' && x.key.startsWith(a.wall + '|') && zones.has(x.zone));
+    if (!s) throw new Error(`wall ${a.wall} has no face in ${room.name}`);
+    keys = [...paintTargets(s.key, false)];
+  } else if (a.target === 'ceiling') keys = ['ceil:' + (room ? room.id : 'base')];
+  else if (a.target === 'door' || a.target === 'frame') { const ref = openingRef(a.opening); if (!ref) throw new Error(`there is no door or window "${a.opening}"`); keys = [(a.target === 'door' ? 'door:' : 'frame:') + ref]; }
+  else if (a.target === 'part') { if (!surfaces.has(a.part) && !surfaces.has('rad:' + a.part)) throw new Error(`part "${a.part}" cannot be painted`); keys = [surfaces.has(a.part) ? a.part : 'rad:' + a.part]; }
+  else throw new Error('target is walls, wall, ceiling, door, frame or part');
+  if (!keys.length) throw new Error('nothing to paint there');
+  for (const k of keys) { if (col) state.paint[k] = col; else delete state.paint[k]; }
+  applyPaint(); commit(); renderPaintPanel(); CONN.log.push('layout');
+  return `${col ? 'painted' : 'unpainted'} ${keys.length} surface(s)`;
+}
+function connFloor(a) {
+  const ids = a.room === 'all' ? ['base', ...HOUSE.rooms.filter((r) => r.pts).map((r) => r.id)] : [a.room === 'base' ? 'base' : (HOUSE.rooms.find((r) => r.id === a.room || r.name.toLowerCase() === String(a.room || '').toLowerCase()) || {}).id];
+  if (!ids[0]) throw new Error(`there is no room "${a.room}"`);
+  let f = null;
+  if (!a.original) {
+    if (!FLOOR_DESIGNS[a.design]) throw new Error(`design is one of ${Object.keys(FLOOR_DESIGNS).join(', ')}`);
+    f = { d: a.design };
+    if (Array.isArray(a.colors) && a.colors.length) f.c = FLOOR_DESIGNS[a.design].cols.map(([, v], i) => (/^#[0-9a-f]{6}$/i.test(a.colors[i] || '') ? a.colors[i] : v));
+    if (a.size_cm > 0) f.size = clamp(+a.size_cm, 1, 500);
+    if (a.direction_deg != null) f.rot = +a.direction_deg;
+  }
+  for (const id of ids) setFloor(id, f, false);
+  commit(); renderRooms(); if (floorRoom) renderFloorPanel(); CONN.log.push('layout');
+  return `${f ? FLOOR_DESIGNS[a.design].name : 'the original floor'} in ${ids.length} room(s)`;
+}
+
+/* the view, and a picture of it for Claude to look at */
+function connView(a) {
+  const modes = { '3d': 'orbit', orbit: 'orbit', plan: 'plan', walk: 'walk' };
+  if (a.mode && modes[a.mode]) { stopLook(); setView(modes[a.mode]); }
+  if (a.walls && { up: 1, cutaway: 1, low: 1 }[a.walls]) setWalls(a.walls === 'cutaway' ? 'cut' : a.walls);
+  if (a.ceilings != null && !!a.ceilings !== !!S.ceilings) setCeilings(!!a.ceilings);
+  if (a.room) {
+    const r = HOUSE.rooms.find((x) => x.id === a.room || x.name.toLowerCase() === String(a.room).toLowerCase());
+    if (!r) throw new Error(`there is no room "${a.room}"`);
+    goRoom(r.id);
+    if (camAnim) { camAnim.t = camAnim.dur; stepAnim(0); }
+  }
+  const c = a.camera;
+  if (c && c.from_cm && c.look_at_cm) {
+    const [x, y, z] = c.from_cm.map((v) => v / 100), [lx, ly, lz] = c.look_at_cm.map((v) => v / 100);
+    if (S.view === 'walk') { walk.pos.set(x, 0, z); walk.yaw = Math.atan2(-(lx - x), -(lz - z)); walk.pitch = Math.atan2(ly - S.eye, Math.hypot(lx - x, lz - z)); }
+    else if (S.view === 'orbit') { persp.position.set(x, y, z); orbit.target.set(lx, ly, lz); orbit.update(); }
+    else { planCtl.target.set(lx, 0, lz); ortho.position.set(lx, 80, lz); planCtl.update(); }
+  }
+  walkStep(0); applyCaps(); invalidate();
+  return `${{ orbit: '3D', plan: 'Plan', walk: 'Walk' }[S.view]} view${a.room ? ' of ' + a.room : ''}`;
+}
+// The picture is drawn at its own size, whatever the size of the window and its side panels; a plan without a room shows the whole house.
+function connShot(a) {
+  connView(a);
+  walkStep(0); applyCaps(); updateRoomLabels();
+  if (ED.on) edScale();
+  const W = clamp(Math.round(+a.width || 1200), 320, 1600), Hh = Math.round(W * 0.625), cam = activeCam(), ratio = renderer.getPixelRatio();
+  const whole = S.view === 'plan' && !a.room && !a.camera, keepPlan = whole && { tgt: planCtl.target.clone(), zoom: ortho.zoom };
+  if (whole) { planCtl.target.copy(CENTER); ortho.position.set(CENTER.x, 80, CENTER.z); ortho.zoom = 1; planCtl.update(); }
+  renderer.setPixelRatio(1); renderer.setSize(W, Hh, false);
+  persp.aspect = walkCam.aspect = W / Hh; persp.clearViewOffset(); persp.updateProjectionMatrix(); walkCam.updateProjectionMatrix();
+  const ppm = Math.max(10, Math.min((W - 48) / (OUT.x1 - OUT.x0 + 1.35), (Hh - 48) / (OUT.z1 - OUT.z0 + 1.22)));
+  Object.assign(ortho, { left: -W / 2 / ppm, right: W / 2 / ppm, top: Hh / 2 / ppm, bottom: -Hh / 2 / ppm }); ortho.clearViewOffset(); ortho.updateProjectionMatrix();
+  lineMats.forEach((m) => m.resolution.set(W, Hh));
+  renderer.render(scene, cam);
+  const [cv, g] = fcanvas(W, Hh);
+  g.drawImage(renderer.domElement, 0, 0, W, Hh);
+  // the room names and measurements over the view, as the page shows them
+  g.font = '600 13px Inter, system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (const L of labels.values()) {
+    if (L.hidden) continue;
+    const v = L.pos.clone().project(cam); if (v.z > 1 || v.z < -1 || Math.abs(v.x) > 1 || Math.abs(v.y) > 1) continue;
+    const text = L.el.innerText.replace(/\s*\n\s*/g, ' · ').replace(/×$/, '').trim(); if (!text) continue;
+    const x = ((v.x + 1) / 2) * W, y = ((1 - v.y) / 2) * Hh, tw = g.measureText(text).width + 12;
+    g.fillStyle = 'rgba(255,255,255,.88)'; g.beginPath(); g.roundRect(x - tw / 2, y - 10, tw, 20, 5); g.fill();
+    g.fillStyle = '#1d1c1a'; g.fillText(text, x, y + 0.5);
+  }
+  // back to the window's own view
+  if (keepPlan) { planCtl.target.copy(keepPlan.tgt); ortho.position.set(keepPlan.tgt.x, 80, keepPlan.tgt.z); ortho.zoom = keepPlan.zoom; planCtl.update(); }
+  renderer.setPixelRatio(ratio); resize(); updateLabels();
+  return { image: cv.toDataURL('image/jpeg', 0.85), note: `${HOUSE.name}, ${{ orbit: '3D', plan: 'Plan', walk: 'Walk' }[S.view]} view` };
+}
+
+/* houses, undo and files */
+function connHouses(a) {
+  if (a.action === 'switch') { if (!HOUSES[a.id]) throw new Error(`there is no house "${a.id}"`); switchHouse(a.id); return `switched to ${HOUSE.name}`; }
+  if (a.action === 'new') {
+    const W = clamp((+a.width_cm || 400) / 100, 1.5, 30), D = clamp((+a.length_cm || 600) / 100, 1.5, 30), Hc = clamp((+a.ceiling_cm || 260) / 100, 2.1, 4);
+    addHouse(simpleHouse(String(a.name || 'New house').slice(0, 60), W, D, Hc));
+    return `made ${HOUSE.name} (${HOUSE.id}), one room of ${cmOf(W)} × ${cmOf(D)} cm; edit_house adds rooms, doors and windows`;
+  }
+  return Object.values(HOUSES).map((h) => ({ id: h.id, name: h.name, sub: h.sub || '', open: h.id === HOUSE.id }));
+}
+function connUndo() {
+  const last = CONN.log.pop();
+  if (last === 'house') {
+    const u = CONN.houseUndo.pop(), old = u && JSON.parse(u.house);
+    if (!u) return 'nothing to undo';
+    if (old) { myHouses[u.id] = old; HOUSES[u.id] = old; } else { delete myHouses[u.id]; HOUSES[u.id] = BUILT_IN[u.id] || HOUSES[u.id]; }
+    ls.set(HOUSE_STORE, JSON.stringify(myHouses));
+    switchHouse(u.id, true);
+    return 'undid the last change to the house';
+  }
+  if (last === 'layout' || history.undo.length) { undo(); return 'undid the last change to the furniture, paint or floors'; }
+  return 'nothing to undo';
+}
+async function connRun(tool, a) {
+  const say = (t) => toast('Claude: ' + t, 2200);
+  switch (tool) {
+    case 'get_home': return connHome();
+    case 'list_furniture': return connCatalog(a.category);
+    case 'edit_house': say('changing the house…'); return connEdit(a.operations);
+    case 'place_furniture': say('placing furniture…'); return connPlace(a.items);
+    case 'update_furniture': say('moving furniture…'); return connUpdate(a.items);
+    case 'remove_furniture': say('removing furniture…'); return connRemove(a.ids);
+    case 'paint': say('painting…'); return connPaint(a);
+    case 'set_floor': say('laying a floor…'); return connFloor(a);
+    case 'set_view': return connView(a);
+    case 'screenshot': return connShot(a);
+    case 'houses': return connHouses(a);
+    case 'undo': say('undo'); return connUndo();
+    case 'export_home': { const out = await homeFile(); return { id: HOUSE.id, text: JSON.stringify(out) }; }
+    case 'open_home': await openHomeText(a.text, a.name || 'home.json'); return `opened ${a.name || 'the file'}: ${HOUSE.name}`;
+    default: throw new Error(`unknown tool ${tool}`);
+  }
+}
+// the link to the connector: commands come as events, answers go back by POST
+const connQ = () => '?token=' + encodeURIComponent(CONN.token);
+function connLink() {
+  const es = new EventSource('/mcp/events' + connQ());
+  es.onopen = () => { $('#claudeBox').hidden = false; };
+  es.onerror = () => { $('#claudeBox').hidden = true; if (es.readyState === EventSource.CLOSED) setTimeout(connRelink, 3000); };
+  es.onmessage = async (m) => {
+    let cmd;
+    const got = Date.now();
+    try { cmd = JSON.parse(m.data); } catch (err) { return; }
+    let reply;
+    const t0 = performance.now();
+    try { reply = { id: cmd.id, ok: true, result: await connRun(cmd.tool, cmd.args || {}) }; } catch (err) { reply = { id: cmd.id, ok: false, error: String((err && err.message) || err) }; }
+    reply.ms = Math.round(performance.now() - t0); reply.got = got;
+    fetch('/mcp/result' + connQ(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(reply) }).catch(() => {});
+  };
+}
+// Claude restarts the connector now and then; it keeps its key, so link up again once it is back
+async function connRelink() {
+  try {
+    const r = await fetch('/mcp/hello' + connQ(), { cache: 'no-store' });
+    if (r.ok) return connLink();
+    if (r.status === 404) return toast('Claude’s connector was restarted. Reload this page to link it up again.', 6000);
+  } catch (err) { /* not back yet */ }
+  setTimeout(connRelink, 5000);
+}
+if (CONN.token) connLink();
 
 /* ---------- wiring and start ---------- */
 $$('#viewSeg button').forEach((b) => (b.onclick = () => setView(b.dataset.view)));

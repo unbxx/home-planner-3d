@@ -28,6 +28,40 @@ Everything you do is saved in your own browser, per house. Nothing is uploaded a
 - **Ceilings**: always there in Walk view (look up, and click one with Paint). In 3D, **Ceiling** (C) shows them when you look up from inside a room or through the cutaway; from above they stay out of the way.
 - **Several houses**: switch between them from the house name at the top left; each keeps its own furniture and paint.
 - **Room photos**: under *Rooms*, *+ Photos* keeps photos of each room next to it, to look back at while you furnish.
+- **Claude**: with the connector below, Claude can change and furnish the home for you while you watch.
+
+## Let Claude design it
+
+The connector lets Claude (in the Claude desktop app or Claude Code) work in the planner: read the home, move and add walls, doors and windows, place and arrange furniture, paint, lay floors, and take pictures of the result to check it. The planner opens in your browser and shows every change as it happens. You can keep editing by hand at the same time, and undo anything.
+
+It runs on your own computer with your normal Claude plan: no API key or account. The connector is a small program in `mcp/` that serves the planner on `http://127.0.0.1:47380` and passes Claude's requests to that tab. Only Claude sees what it reads from the planner, as in any chat.
+
+**Claude desktop app**
+
+1. Download [home-planner-3d.mcpb](https://github.com/unbxx/home-planner-3d/raw/main/mcp/home-planner-3d.mcpb).
+2. Double-click it, or drag it onto *Settings → Extensions* in the Claude app, and choose *Install*.
+3. Start a chat and ask, for example: *"Open the home planner, make a new flat of 7 by 4.5 m with a bedroom on the east side, and furnish it."*
+
+**Claude Code** (needs [Node.js](https://nodejs.org) 18 or later, and git)
+
+```sh
+claude mcp add home-planner -- npx -y github:unbxx/home-planner-3d
+```
+
+Things to ask:
+
+- *"Show me my home in plan view and tell me what you see."*
+- *"Put a 3-seat sofa against the west wall of the living room, facing the window, and a coffee table in front of it."*
+- *"Will a 160 × 200 bed with two bedside tables fit in the bedroom, with room to walk around it?"*
+- *"Paint the bedroom walls sage green and lay a light oak floor in every room except the bathroom."*
+- *"Move the wall between the kitchen and the living room 40 cm to the east and make a wide opening in it without a door."*
+- *"Export this home to my Downloads folder."*
+
+Good to know:
+
+- The tab at `127.0.0.1` keeps its own houses and furniture, apart from the website's (browsers keep each site's storage apart). To bring in a house you already made, use *File → Export this home* on the website, then ask Claude to open that file (or use *File → Open* in the tab).
+- If the tab was closed, Claude opens it again. If Claude was restarted, an open tab links up again by itself; the Claude badge at the top shows when it is linked.
+- Settings, as environment variables: `PLANNER_FILE` (a planner `.html` file of your own to use instead of the website; the desktop extension asks for it in its settings), `PLANNER_PORT` (the first port to try, 47380), `NO_OPEN=1` (don't open the browser).
 
 ## Editing the house
 
@@ -97,3 +131,5 @@ python3 build.py
 ```
 
 which writes `index.html` with the houses from `houses/` (the first file is the one it opens with) and the colours from `src/tokens.json`. The site at the link above is `index.html` on the `main` branch.
+
+The connector is `mcp/server.js` (Node, no dependencies); the page side is the *Claude connector* part of `src/planner.src.html`. After changing either, `python3 mcp/pack.py` rebuilds `mcp/home-planner-3d.mcpb` from `mcp/manifest.json`, `mcp/icon.png` and the server (keep the version in `manifest.json`, `package.json` and `server.js` the same).

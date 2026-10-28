@@ -1,0 +1,58 @@
+{
+  "manifest_version": "0.3",
+  "name": "home-planner-3d",
+  "display_name": "Home planner 3D",
+  "version": "1.0.0",
+  "description": "Let Claude change and furnish your home in the 3D home planner, live in your browser.",
+  "long_description": "Claude can read your home, move and add walls, doors and windows, place and arrange furniture, paint walls and ceilings, lay floors and take pictures of the result to check it. The planner opens in your browser on this computer and shows every change as it happens; you can keep editing by hand, undo, and export the home to share. Nothing leaves your computer except loading the planner page itself.",
+  "author": {
+    "name": "unbxx",
+    "url": "https://github.com/unbxx"
+  },
+  "homepage": "https://unbxx.github.io/home-planner-3d/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/unbxx/home-planner-3d"
+  },
+  "icon": "icon.png",
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/index.js"],
+      "env": {
+        "PLANNER_FILE": "${user_config.planner_file}"
+      }
+    }
+  },
+  "tools": [
+    { "name": "get_home", "description": "Read the rooms, walls, doors, windows, furniture, paint and floors" },
+    { "name": "list_furniture", "description": "The furniture that can be placed, with sizes and options" },
+    { "name": "edit_house", "description": "Move, add or remove walls, doors, windows, columns, beams and rooms" },
+    { "name": "place_furniture", "description": "Place furniture at a spot, size, colour and direction" },
+    { "name": "update_furniture", "description": "Move, turn, resize or recolour placed furniture" },
+    { "name": "remove_furniture", "description": "Remove placed furniture" },
+    { "name": "paint", "description": "Paint walls, ceilings, doors, frames and parts of the house" },
+    { "name": "set_floor", "description": "Lay a floor design in a room" },
+    { "name": "set_view", "description": "Switch between 3D, plan and walk views, or look at a room" },
+    { "name": "screenshot", "description": "Take a picture of the planner to check the design" },
+    { "name": "houses", "description": "List, switch or start homes" },
+    { "name": "undo", "description": "Undo the last change" },
+    { "name": "export_home", "description": "Save the home as a file to share" },
+    { "name": "open_home_file", "description": "Open a home file from this computer" }
+  ],
+  "user_config": {
+    "planner_file": {
+      "type": "file",
+      "title": "Your own planner file (optional)",
+      "description": "A planner .html file on this computer to use instead of the website.",
+      "required": false
+    }
+  },
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": { "node": ">=18.0.0" }
+  },
+  "keywords": ["home", "floor plan", "furniture", "interior", "3d"]
+}
