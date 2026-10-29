@@ -23,6 +23,7 @@ Everything you do is saved in your own browser, per house. Nothing is uploaded a
 - **Kitchen and bathroom**: cabinets, appliances, sinks, washbasins, mirrors, showers, baths and toilets, each with its own fronts, handles and colours.
 - **Furniture**: sofas, beds, tables, chairs, storage, rugs, plants, lamps, shelves, wall art and more. Small things rest on what they are put on (a worktop, a shelf, a sofa seat), and *On a shelf of …* puts them on a chosen shelf of a bookcase or rack.
 - **Your own models**: *Import 3D model* (GLB works best; GLTF, OBJ, STL and FBX too). You type the real size from the product page and the model is scaled to exactly that.
+- **Libraries**: ready-made models at their real size. Search [Poly Haven](https://polyhaven.com/models) (free for anything, CC0) and click one to place it. For [3D Warehouse](https://3dwarehouse.sketchup.com/), find a model there and paste its link: with the Claude connector running it comes in with one click; on the website you download its 3D copy and drop it on the planner. Each model keeps a note of where it came from and who made it.
 - **Checking the fit**: a red outline when a piece runs into a wall or another piece, the free space around the selected piece, and a measuring tool.
 - **Paint**: any wall, each room's ceiling, the window reveals, frames, doors and radiators, with the area per colour to work out how much paint to buy.
 - **Ceilings**: always there in Walk view (look up, and click one with Paint). In 3D, **Ceiling** (C) shows them when you look up from inside a room or through the cutaway; from above they stay out of the way.
@@ -36,7 +37,7 @@ Everything you do is saved in your own browser, per house. Nothing is uploaded a
 
 The connector lets Claude (in the Claude desktop app or Claude Code) work in the planner: read the home, move and add walls, doors and windows, place and arrange furniture, paint, lay floors, and take pictures of the result to check it. The planner opens in your browser and shows every change as it happens. You can keep editing by hand at the same time, and undo anything.
 
-It runs on your own computer with your normal Claude plan: no API key or account. The connector is a small program in `mcp/` that serves the planner on `http://127.0.0.1:47380` and passes Claude's requests to that tab. Only Claude sees what it reads from the planner, as in any chat.
+It runs on your own computer with your normal Claude plan: no API key or account. The connector is a small program in `mcp/` that serves the planner on `http://127.0.0.1:47380` and passes Claude's requests to that tab. It also fetches a 3D Warehouse model for the planner when you paste its link, since 3D Warehouse does not let web pages fetch its files. Only Claude sees what it reads from the planner, as in any chat.
 
 **Claude desktop app**
 
@@ -57,6 +58,8 @@ Things to ask:
 - *"Will a 160 × 200 bed with two bedside tables fit in the bedroom, with room to walk around it?"*
 - *"Paint the bedroom walls sage green and lay a light oak floor in every room except the bathroom."*
 - *"Move the wall between the kitchen and the living room 40 cm to the east and make a wide opening in it without a door."*
+- *"Find a nice armchair on Poly Haven and put two by the window."*
+- *"Place this sofa from 3D Warehouse along the north wall: https://3dwarehouse.sketchup.com/model/…"*
 - *"Export this home to my Downloads folder."*
 
 Good to know:

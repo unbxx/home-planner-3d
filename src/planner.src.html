@@ -245,6 +245,19 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .claude-on .cdot { width: 8px; height: 8px; border-radius: 50%; background: #2f9e66; box-shadow: 0 0 0 3px rgba(47,158,102,.18); }
 #claudeBox[hidden] { display: none; }
 
+/* libraries */
+a.btn { text-decoration: none; color: inherit; }
+.libcard { display: flex; gap: 10px; align-items: center; margin-top: var(--space-3); }
+.libcard img, .libph { width: 64px; height: 64px; border-radius: var(--radius-sm); border: 1px solid var(--line); object-fit: cover; background: var(--surface-sunk); flex: none; }
+.libcard b { display: block; font-size: 13.5px; line-height: 18px; overflow-wrap: anywhere; }
+.libsteps { margin: 10px 0 0; padding-left: 20px; font-size: 13px; display: grid; gap: 8px; }
+.phgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: var(--space-3); }
+.phtile { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius-md); padding: 6px; cursor: pointer; display: flex; flex-direction: column; gap: 4px; text-align: left; font-size: 12px; font-weight: 500; line-height: 15px; min-width: 0; }
+.phtile:hover { border-color: var(--line-strong); }
+.phtile:disabled { cursor: progress; opacity: .6; }
+.phtile img { width: 100%; aspect-ratio: 1; object-fit: contain; background: var(--surface-sunk); border-radius: var(--radius-sm); }
+.phtile span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 @media (max-width: 860px) {
   .bside { top: auto; height: 44%; width: auto; right: var(--space-3); }
   .bhint, .bhead .brand { display: none; }
@@ -314,6 +327,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     <div class="pane" data-pane="lib">
       <button class="btn primary block" id="btnImport"><svg class="i" viewBox="0 0 16 16"><path d="M8 2v9M4.5 7.5 8 11l3.5-3.5M2.5 13.5h11"/></svg>Import 3D model</button>
       <p class="muted small" style="margin:8px 2px 0">GLB, GLTF, OBJ, STL or FBX, or drop the file on the view. You enter the real size; the model is scaled to it.</p>
+      <button class="btn block" id="btnLibs" style="margin-top:10px"><svg class="i" viewBox="0 0 16 16"><path d="M2.5 2.5h3v11h-3zM6.5 2.5h3v11h-3zM10.5 3.2l2.8-.8 2.2 10.6-2.8.8z"/></svg>Libraries: 3D Warehouse, Poly Haven</button>
       <div id="library"></div>
     </div>
     <div class="pane" data-pane="rooms" hidden><div id="roomList"></div></div>
@@ -324,6 +338,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   <aside class="inspector panel" id="paintPanel" hidden></aside>
   <aside class="inspector panel" id="doorPanel" hidden></aside>
   <aside class="inspector panel" id="floorPanel" hidden></aside>
+  <aside class="inspector panel" id="libPanel" hidden></aside>
   <aside class="inspector panel" id="editPanel" hidden></aside>
 
   <div class="hint" id="hint"></div>
@@ -447,6 +462,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   <input type="file" id="filePlan" hidden accept="image/*">
   <input type="file" id="filePhotos" hidden multiple accept="image/*">
   <input type="file" id="fileFloor" hidden accept="image/*">
+  <input type="file" id="fileLib" hidden>
 </div>
 
 <script>
@@ -543,6 +559,184 @@ function houseDefaults() {
 }
 houseDefaults();
 const S = state.settings;
+
+/* ---------- libraries: ready-made models from 3D Warehouse (by link) and Poly Haven (search) ---------- */
+// 3D Warehouse has no public search for other apps and does not let web pages fetch its files, so a model comes in by the link
+// the user pastes: the Claude connector fetches that one model's 3D copy for the page; without it, the user downloads it and drops it here.
+// Poly Haven's models are free for anything (CC0) and its own API may be used from any page.
+const LIB = { open: false, tab: 'wh', wh: null, whBusy: false, ph: null, phAll: null, q: '', cat: 'furniture', shown: 48, busy: null };
+const PH_API = 'https://api.polyhaven.com';
+const PH_CATS = { furniture: 'Furniture', seating: 'Seating', table: 'Tables', shelves: 'Shelves', lighting: 'Lighting', decorative: 'Decorative', plants: 'Plants', appliances: 'Appliances', electronics: 'Electronics', containers: 'Containers', all: 'Everything' };
+// a model's page on 3D Warehouse: …/model/{id}/{title}
+function whLink(s) {
+  const m = /3dwarehouse\.sketchup\.com\/(?:[a-z-]+\/)?model\/([A-Za-z0-9-]{6,64})(?:\/([^?#\s]*))?/i.exec(String(s || '').trim());
+  if (!m) return null;
+  let title = ''; try { title = decodeURIComponent(m[2] || ''); } catch (e) { title = m[2] || ''; }
+  title = title.replace(/[-_]+/g, ' ').trim();
+  return { id: m[1], title: title || 'Model from 3D Warehouse', page: `https://3dwarehouse.sketchup.com/model/${m[1]}` };
+}
+const whGlbUrl = (id) => `https://3dwarehouse.sketchup.com/warehouse/v1.0/entities/${id}/binaries/glb?download=true`;
+async function connJson(path) {
+  const r = await fetch(`${path}${path.includes('?') ? '&' : '?'}token=${CONN.token}`);
+  if (!r.ok) throw new Error((await r.text().catch(() => '')) || `the connector answered ${r.status}`);
+  return r;
+}
+async function whInfo(link) {
+  if (!CONN.token) return { ...link, viaFile: true };
+  return { ...link, ...(await (await connJson(`/lib/3dw?id=${encodeURIComponent(link.id)}`)).json()) };
+}
+async function whFiles(m) {
+  const buf = await (await connJson(`/lib/3dw/glb?id=${encodeURIComponent(m.id)}`)).arrayBuffer();
+  return [new File([buf], (m.title || 'model').replace(/[\\/:*?"<>|]+/g, ' ').slice(0, 60) + '.glb')];
+}
+function phList() {
+  if (!LIB.phAll) LIB.phAll = fetch(`${PH_API}/assets?t=models`).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then((o) => Object.entries(o).map(([id, a]) => ({ id, name: a.name || id, cats: a.categories || [], tags: a.tags || [], n: a.download_count || 0 })).sort((a, b) => b.n - a.n))
+    .catch((e) => { LIB.phAll = null; throw e; });
+  return LIB.phAll;
+}
+function phFind(all, q, cat) {
+  const words = String(q || '').toLowerCase().split(/\s+/).filter(Boolean);
+  // "armchair" also finds "Arm Chair 01": words are matched with and without the spaces
+  const hay = (a) => a._hay || (a._hay = [a.name, a.id, ...a.tags, ...a.cats].join(' ').toLowerCase() + ' ' + [a.name, a.id].join(' ').toLowerCase().replace(/[\s_-]+/g, ''));
+  return all.filter((a) => (cat === 'all' || a.cats.includes(cat)) && words.every((w) => hay(a).includes(w)));
+}
+const phThumb = (id) => `https://cdn.polyhaven.com/asset_img/thumbs/${encodeURIComponent(id)}.png?width=240&height=240`;
+// a Poly Haven model as its glTF, the binary and the textures, at 1k
+async function phFiles(id) {
+  const r = await fetch(`${PH_API}/files/${encodeURIComponent(id)}`); if (!r.ok) throw new Error('Poly Haven has no model ' + id);
+  const g = (await r.json()).gltf || {}, res = g['1k'] || g['2k'] || Object.values(g)[0], main = res && res.gltf;
+  if (!main) throw new Error('this model has no glTF version');
+  const parts = [[main.url, main.url.split('/').pop()], ...Object.entries(main.include || {}).map(([p, v]) => [v.url, p.split('/').pop()])];
+  return Promise.all(parts.map(async ([u, name]) => { const f = await fetch(u); if (!f.ok) throw new Error(`could not download ${name}`); return new File([await f.arrayBuffer()], name); }));
+}
+const phLink = (s) => { const m = /polyhaven\.com\/a\/([A-Za-z0-9_-]+)/i.exec(String(s || '')); return m ? m[1] : /^[A-Za-z0-9_-]+$/.test(String(s || '').trim()) ? String(s).trim() : null; };
+
+function openLibraries(tab) {
+  if (state.selected) select(null);
+  if (floorRoom) closeFloorPanel();
+  if (tab) LIB.tab = tab;
+  LIB.open = true; renderLibPanel(); setHint();
+}
+function closeLibraries() { LIB.open = false; $('#libPanel').hidden = true; setHint(); }
+function renderLibPanel() {
+  const el = $('#libPanel');
+  if (!LIB.open) { el.hidden = true; return; }
+  el.hidden = false;
+  const tabs = `<div class="pmode" style="margin-top:8px"><button data-ltab="wh" class="${LIB.tab === 'wh' ? 'on' : ''}">3D Warehouse</button><button data-ltab="ph" class="${LIB.tab === 'ph' ? 'on' : ''}">Poly Haven</button></div>`;
+  el.innerHTML = `<div class="ihead"><div class="ptitle" style="flex:1">Libraries</div><button class="xbtn" id="lClose" title="Close this panel (Esc)" aria-label="Close">✕</button></div>${tabs}<div id="lBody"></div>`;
+  $('#lClose', el).onclick = closeLibraries;
+  $$('[data-ltab]', el).forEach((b) => (b.onclick = () => { LIB.tab = b.dataset.ltab; renderLibPanel(); setHint(); }));
+  if (LIB.tab === 'wh') renderWarehouse($('#lBody', el)); else renderPolyHaven($('#lBody', el));
+}
+function renderWarehouse(body) {
+  const m = LIB.wh;
+  body.innerHTML = `
+    <p class="muted small" style="margin:10px 0 0">Find a model on 3D Warehouse, copy its link from the address bar and paste it here. It comes in at its real size.</p>
+    <a class="btn block" style="margin-top:8px" href="https://3dwarehouse.sketchup.com/" target="_blank" rel="noopener">Open 3D Warehouse ↗</a>
+    <label class="field" style="margin-top:12px">Model link<input id="whLink" placeholder="https://3dwarehouse.sketchup.com/model/…" value="${m ? esc(m.page) : ''}" autocomplete="off" spellcheck="false"></label>
+    <div id="whCard"></div>
+    <p class="muted small" style="margin:12px 0 0">Models on 3D Warehouse are made by its users and may be used in your own designs under its <a href="https://3dwarehouse.sketchup.com/tos" target="_blank" rel="noopener">terms</a>. 3D Warehouse makes the 3D copy used here for models under about 10 MB.</p>`;
+  const inp = $('#whLink', body);
+  const go = async () => {
+    const link = whLink(inp.value);
+    if (!inp.value.trim()) { LIB.wh = null; renderWhCard(body); return; }
+    if (!link) { $('#whCard', body).innerHTML = '<p class="small" style="color:var(--clash);margin:8px 0 0">That is not a link to a model on 3D Warehouse. It looks like https://3dwarehouse.sketchup.com/model/…</p>'; return; }
+    if (LIB.wh && LIB.wh.id === link.id && !LIB.wh.error) return;
+    LIB.wh = { ...link, loading: !!CONN.token }; renderWhCard(body);
+    try { LIB.wh = await whInfo(link); } catch (e) { LIB.wh = { ...link, error: e.message }; }
+    renderWhCard(body);
+  };
+  inp.addEventListener('input', go); inp.addEventListener('paste', () => setTimeout(go, 0));
+  renderWhCard(body);
+}
+function renderWhCard(body) {
+  const card = $('#whCard', body), m = LIB.wh;
+  if (!m) { card.innerHTML = ''; return; }
+  const head = `<div class="libcard">${m.thumb ? `<img src="${esc(m.thumb)}" alt="">` : '<span class="libph"></span>'}<div class="grow"><b>${esc(m.title)}</b><div class="muted small">${m.author ? 'by ' + esc(m.author) + ' · ' : ''}<a href="${esc(m.page)}" target="_blank" rel="noopener">3D Warehouse ↗</a></div></div></div>`;
+  if (m.loading) { card.innerHTML = head + '<p class="muted small" style="margin:8px 0 0">Looking it up…</p>'; return; }
+  if (m.error) { card.innerHTML = head + `<p class="small" style="color:var(--clash);margin:8px 0 0">${esc(m.error)}</p>`; return; }
+  if (m.viaFile) {
+    // without the connector the page cannot fetch it: the user's browser downloads it, and it is dropped back in
+    card.innerHTML = head + `
+      <ol class="libsteps"><li><a class="btn sm" href="${esc(whGlbUrl(m.id))}" target="_blank" rel="noopener">Download the 3D copy</a></li>
+      <li>Drop the downloaded file on the planner, or <button class="btn sm" id="whPick">choose it</button></li></ol>
+      <p class="muted small" style="margin:6px 0 0">With the Claude connector (see the read-me) this is one click.</p>`;
+    LIB.expect = { title: m.title, by: m.author || '', page: m.page, lib: '3D Warehouse' };
+    $('#whPick', card).onclick = () => $('#fileLib').click();
+    return;
+  }
+  if (m.glb === false || m.glb === null) { card.innerHTML = head + '<p class="small" style="margin:8px 0 0">3D Warehouse has no 3D copy of this model (it makes one for models under about 10 MB), so it cannot be placed from here. Download it in SketchUp or as COLLADA there, and import that.</p>'; return; }
+  card.innerHTML = head + `<button class="btn primary block" id="whPlace" style="margin-top:8px"${LIB.whBusy ? ' disabled' : ''}>${LIB.whBusy ? 'Downloading…' : 'Place it'}</button>`;
+  $('#whPlace', card).onclick = async () => {
+    LIB.whBusy = true; renderWhCard(body);
+    try { await importFiles(await whFiles(m), { title: m.title, by: m.author || '', page: m.page, lib: '3D Warehouse' }); }
+    catch (e) { toast('The model could not be downloaded: ' + e.message, 4000); }
+    LIB.whBusy = false; if (LIB.open && LIB.tab === 'wh') renderWhCard(body);
+  };
+}
+async function renderPolyHaven(body) {
+  body.innerHTML = `
+    <label class="field" style="margin-top:10px">Search<input id="phQ" placeholder="chair, lamp, plant…" value="${esc(LIB.q)}" autocomplete="off"></label>
+    <div class="chips" style="margin-top:8px">${Object.entries(PH_CATS).map(([k, v]) => `<button data-phc="${k}" class="${LIB.cat === k ? 'on' : ''}">${v}</button>`).join('')}</div>
+    <div id="phGrid" class="phgrid"><div class="empty">Loading Poly Haven…</div></div>
+    <p class="muted small" style="margin:12px 0 0">Models by <a href="https://polyhaven.com/models" target="_blank" rel="noopener">Poly Haven</a>, free for anything (CC0). They come in at their real size.</p>`;
+  const q = $('#phQ', body);
+  q.oninput = () => { LIB.q = q.value; LIB.shown = 48; phGrid(body); };
+  $$('[data-phc]', body).forEach((b) => (b.onclick = () => { LIB.cat = b.dataset.phc; LIB.shown = 48; $$('[data-phc]', body).forEach((x) => x.classList.toggle('on', x === b)); phGrid(body); }));
+  phGrid(body);
+}
+async function phGrid(body) {
+  const grid = $('#phGrid', body);
+  let all;
+  try { all = await phList(); } catch (e) { grid.innerHTML = '<div class="empty">Poly Haven could not be reached. Check the internet connection and try again.</div>'; return; }
+  if (!grid.isConnected) return;
+  const found = phFind(all, LIB.q, LIB.cat);
+  if (!found.length) { grid.innerHTML = '<div class="empty">Nothing found. Try another word or Everything.</div>'; return; }
+  grid.innerHTML = found.slice(0, LIB.shown).map((a) => `<button class="phtile" data-ph="${esc(a.id)}" title="Place: ${esc(a.name)}"${LIB.busy ? ' disabled' : ''}><img loading="lazy" src="${phThumb(a.id)}" alt=""><span>${LIB.busy === a.id ? 'Downloading…' : esc(a.name)}</span></button>`).join('')
+    + (found.length > LIB.shown ? `<button class="btn block" id="phMore" style="grid-column:1/-1">Show more (${found.length - LIB.shown})</button>` : '');
+  $$('[data-ph]', grid).forEach((b) => (b.onclick = () => phPlace(b.dataset.ph, body)));
+  if ($('#phMore', grid)) $('#phMore', grid).onclick = () => { LIB.shown += 48; phGrid(body); };
+}
+async function phPlace(id, body) {
+  const a = (await phList()).find((x) => x.id === id);
+  LIB.busy = id; phGrid(body);
+  try { await importFiles(await phFiles(id), { title: a ? a.name : id, by: 'Poly Haven', page: `https://polyhaven.com/a/${id}`, lib: 'Poly Haven', licence: 'CC0' }); }
+  catch (e) { toast('The model could not be downloaded: ' + e.message, 4000); }
+  LIB.busy = null; if (LIB.open && LIB.tab === 'ph') phGrid(body);
+}
+// a library model straight onto the floor, at its real size, for Claude
+async function libModelItem(files, src, spec = {}) {
+  const rec = { name: files[0].name, main: (files.find((f) => /\.(glb|gltf)$/i.test(f.name)) || files[0]).name, files: await Promise.all(files.map(async (f) => ({ name: f.name, data: await f.arrayBuffer() }))) };
+  const obj = await parseModel(rec), size = new THREE.Box3().setFromObject(obj).getSize(new THREE.Vector3());
+  if (!isFinite(size.x) || size.length() === 0) throw new Error('the model is empty');
+  const key = 'm' + Date.now().toString(36) + uid();
+  await putModel(key, rec); rawModels.set(key, Promise.resolve(obj));
+  const it = { id: uid(), kind: 'model', model: key, name: String(spec.name || src.title).slice(0, 60), w: size.x, d: size.z, h: size.y, x: CENTER.x, z: CENTER.z, y: 0, rot: 0, fix: [0, 0, 0], lock: true, color: '#c9c3b8', stack: false, credit: src };
+  if (spec.size_cm) { const [w, d, h] = spec.size_cm; if (w > 0) it.w = w / 100; if (d > 0) it.d = d / 100; if (h > 0) it.h = h / 100; }
+  if (spec.centre_cm) { it.x = spec.centre_cm[0] / 100; it.z = spec.centre_cm[1] / 100; }
+  if (spec.facing && FACING[spec.facing] !== undefined) it.rot = FACING[spec.facing];
+  if (spec.rot_deg != null) it.rot = ((+spec.rot_deg % 360) + 360) % 360;
+  state.items.push(it); syncItem(it); updateClashes(); renderPlaced(); commit(); CONN.log.push('layout');
+  return it;
+}
+async function connLibrary(a) {
+  const wh = whLink(a.link);
+  if (wh) {
+    if (!CONN.token) throw new Error('3D Warehouse models can only be fetched through the connector');
+    const m = await whInfo(wh);
+    if (!m.glb) throw new Error('3D Warehouse has no 3D copy of this model (it makes one for models under about 10 MB)');
+    return itemReport(await libModelItem(await whFiles(m), { title: m.title, by: m.author || '', page: m.page, lib: '3D Warehouse' }, a));
+  }
+  const id = phLink(a.link);
+  const all = await phList(), ph = id && all.find((x) => x.id.toLowerCase() === id.toLowerCase());
+  if (!ph) throw new Error('give a 3D Warehouse model link, or a Poly Haven model id from search_library');
+  return itemReport(await libModelItem(await phFiles(ph.id), { title: ph.name, by: 'Poly Haven', page: `https://polyhaven.com/a/${ph.id}`, lib: 'Poly Haven', licence: 'CC0' }, a));
+}
+async function connLibSearch(a) {
+  const found = phFind(await phList(), a.query, a.category && PH_CATS[a.category] ? a.category : 'all');
+  return { library: 'Poly Haven (CC0, real size)', note: '3D Warehouse cannot be searched from here; the user can paste a link to one of its models.', results: found.slice(0, 30).map((x) => ({ id: x.id, name: x.name, categories: x.cats })) };
+}
 
 /* ---------- renderer, scene, cameras ---------- */
 const host = $('#view');
@@ -1879,6 +2073,7 @@ const floorRooms = () => HOUSE.rooms.filter((r) => r.pts);
 function openFloorPanel(rid) {
   if (selDoor) selectDoor(null);
   if (state.selected) select(null);
+  if (LIB.open) closeLibraries();
   floorRoom = rid || (floorRooms()[0] || { id: 'base' }).id;
   if (state.tool === 'paint') $('#paintPanel').hidden = true;
   if (ED.on) $('#editPanel').hidden = true;
@@ -4430,6 +4625,7 @@ function renderInspector() {
   const it = state.selected && itemById(state.selected);
   insp.hidden = !it;
   if (!it) return;
+  if (LIB.open) closeLibraries();
   const isModel = it.kind === 'model';
   const colorable = it.kind === 'preset' || (isModel && views.get(it.id)?.untextured);
   insp.innerHTML = `
@@ -4486,6 +4682,7 @@ function renderInspector() {
     ${isModel ? `<div class="cap">Model orientation</div>
     <div class="row" style="margin-top:0"><button class="btn sm" id="iUp" title="Turn the model 90° forwards, for models lying on their back">Stand up</button><button class="btn sm" id="iTip" title="Turn the model 90° sideways">Tip sideways</button><button class="btn sm" id="iFixReset">Reset</button></div>
     <p class="muted small" style="margin:6px 0 0">Use these if the model arrives lying down. The size stays as entered.</p>` : ''}
+    ${isModel && it.credit ? `<p class="muted small" style="margin:10px 0 0">From <a href="${esc(it.credit.page)}" target="_blank" rel="noopener">${esc(it.credit.lib)}</a>${it.credit.by && it.credit.by !== it.credit.lib ? ', by ' + esc(it.credit.by) : ''}${it.credit.licence ? ' · ' + esc(it.credit.licence) : ''}</p>` : ''}
     <div class="actions"><button class="btn" id="iDup" title="Duplicate (Ctrl/⌘+D)">Duplicate</button><button class="btn danger" id="iDel" title="Delete (Del)">Delete</button></div>
     <p class="muted small" style="margin:12px 0 0">${followersOf(it).length ? `Moves and turns together with ${followersOf(it).length} chair${followersOf(it).length === 1 ? '' : 's'}. Drag a chair to move it on its own.` : it.with && itemById(it.with) ? 'Part of a dining set: it follows the table, and can still be moved on its own.' : 'Position is the centre of the piece, measured from the inside of the walls of the living block.'}</p>`;
   updateInspectorStatus();
@@ -4949,7 +5146,7 @@ function renderPlaced() {
   $('#placedCount').textContent = state.items.length;
   const list = $('#placedList');
   if (!state.items.length) { list.innerHTML = '<div class="empty">Nothing placed yet. Pick a piece under Furniture, or import your own model.</div>'; return; }
-  list.innerHTML = state.items.map((it) => `<div class="list-row ${state.selected === it.id ? 'on' : ''}" data-id="${it.id}" role="button" tabindex="0"><div class="grow"><div class="t">${esc(it.name)}</div><div class="s num">${cm(it.w)} × ${cm(it.d)} × ${cm(it.h)} cm${it.kind === 'model' ? ' · imported' : ''}</div></div><span class="badge" data-badge="${it.id}">${it._clash ? 'Overlaps' : ''}</span></div>`).join('');
+  list.innerHTML = state.items.map((it) => `<div class="list-row ${state.selected === it.id ? 'on' : ''}" data-id="${it.id}" role="button" tabindex="0"><div class="grow"><div class="t">${esc(it.name)}</div><div class="s num">${cm(it.w)} × ${cm(it.d)} × ${cm(it.h)} cm${it.kind === 'model' ? ' · ' + (it.credit ? esc(it.credit.lib) : 'imported') : ''}</div></div><span class="badge" data-badge="${it.id}">${it._clash ? 'Overlaps' : ''}</span></div>`).join('');
   $$('#placedList .list-row').forEach((el) => { el.onclick = () => select(el.dataset.id); el.onkeydown = (e) => { if (e.key === 'Enter') select(el.dataset.id); }; });
 }
 function renderPlacedBadges() { for (const it of state.items) { const b = document.querySelector(`[data-badge="${it.id}"]`); if (b) b.textContent = it._clash ? 'Overlaps' : ''; } }
@@ -4965,6 +5162,7 @@ function startPlacing(it, kit = null) {
   stopLook();
   if (ED.on) edClose();
   if (floorRoom) closeFloorPanel();
+  if (LIB.open) closeLibraries();
   if (selDoor) selectDoor(null);
   cancelTool();
   placing = it;
@@ -5157,6 +5355,7 @@ function setHint() {
   if (LOOK.on) t = LOOK.locked ? 'Move the mouse to look around · W A S D or arrows to walk, Shift to go faster · E opens the door in the middle · Esc stops' : 'Move the mouse over the view to look around · W A S D to walk · E opens the door in the middle · click to lock the mouse · Esc or L stops';
   else if (ED.on) t = edHintText();
   else if (floorRoom) t = 'Pick a floor, or use ‹ › to go through them · Esc closes the panel';
+  else if (LIB.open) t = LIB.tab === 'wh' ? 'Paste the link of a model on 3D Warehouse · Esc closes the panel' : 'Search Poly Haven and click a model to place it · Esc closes the panel';
   else if (state.tool === 'place') t = placing && PRESETS[placing.preset] && PRESETS[placing.preset].blinds ? 'Point at a window and click: the blind fits that pane · Alt: place it freely · Esc cancels' : 'Move over the floor and click to place · R rotates · Alt: no snapping · Esc cancels';
   else if (state.tool === 'paint') t = 'Click a wall, ceiling, frame, door or radiator to paint it · Shift-click: all walls of the room · Alt-click: pick up a colour · Esc stops';
   else if (state.tool === 'measure') t = msStart ? 'Click the second point · Esc cancels' : 'Click two points to measure · snaps to wall corners · Alt: no snapping';
@@ -5460,6 +5659,7 @@ window.addEventListener('keydown', (e) => {
   if (!mod && k === 'l') { toggleLook(); return; }
   if (!mod && k === 'c') { setCeilings(!S.ceilings); return; }
   if (floorRoom && k === 'escape') { closeFloorPanel(); return; }
+  if (LIB.open && k === 'escape') { closeLibraries(); return; }
   if (ED.on && edKey(e)) return;
   if (!mod && k === 'b' && !ED.on) { edStart(); return; }
   if (mod && k === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
@@ -7975,7 +8175,16 @@ function edPanel() {
 let pendingImport = null;
 $('#btnImport').onclick = () => $('#fileModel').click();
 $('#fileModel').onchange = (e) => { const files = [...e.target.files]; e.target.value = ''; if (files.length) importFiles(files); };
-async function importFiles(files) {
+$('#btnLibs').onclick = () => openLibraries();
+$('#fileLib').onchange = (e) => { const files = [...e.target.files]; e.target.value = ''; if (files.length) importFiles(files); };
+async function importFiles(files, src = null) {
+  // a model from a library comes with its name and maker, at its real size; a 3D Warehouse download has no extension but is a GLB inside
+  if (!files.some((f) => MODEL_EXT.includes(extOf(f.name)))) {
+    const glb = await Promise.all(files.map(async (f) => new TextDecoder().decode(await f.slice(0, 4).arrayBuffer()) === 'glTF'));
+    const i = glb.indexOf(true);
+    if (i >= 0) { files = files.slice(); files[i] = new File([files[i]], ((src || LIB.expect || {}).title || 'model').replace(/[\\/:*?"<>|]+/g, ' ').slice(0, 60) + '.glb'); }
+  }
+  if (!src && LIB.expect && LIB.open && LIB.tab === 'wh' && files.some((f) => extOf(f.name) === 'glb')) { src = LIB.expect; LIB.expect = null; }
   const main = files.find((f) => ['glb', 'gltf', 'fbx', 'obj', 'stl'].includes(extOf(f.name)));
   if (!main) { toast('Choose a .glb, .gltf, .obj, .stl or .fbx file.'); return; }
   const rec = { name: main.name, main: main.name, files: await Promise.all(files.map(async (f) => ({ name: f.name, data: await f.arrayBuffer() }))) };
@@ -7987,13 +8196,13 @@ async function importFiles(files) {
   const stored = await putModel(key, rec);
   rawModels.set(key, Promise.resolve(obj));
   const mx = Math.max(size.x, size.y, size.z);
-  const unit = mx > 400 ? 0.1 : mx > 8 ? 1 : 100; // guess mm, cm or m → cm
-  pendingImport = { key, raw: size.clone(), stored };
-  $('#impFile').textContent = `${main.name} · ${(main.size / 1048576).toFixed(1)} MB`;
-  $('#impName').value = main.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ');
+  const unit = src ? 100 : mx > 400 ? 0.1 : mx > 8 ? 1 : 100; // library models are in metres; otherwise guess mm, cm or m → cm
+  pendingImport = { key, raw: size.clone(), stored, credit: src };
+  $('#impFile').textContent = src ? `${src.lib} · ${(files.reduce((a, f) => a + f.size, 0) / 1048576).toFixed(1)} MB` : `${main.name} · ${(main.size / 1048576).toFixed(1)} MB`;
+  $('#impName').value = src ? src.title : main.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ');
   $('#impW').value = +(size.x * unit).toFixed(1); $('#impD').value = +(size.z * unit).toFixed(1); $('#impH').value = +(size.y * unit).toFixed(1);
   $('#impLock').checked = true;
-  $('#impRaw').textContent = `In the file it measures ${size.x.toPrecision(3)} × ${size.z.toPrecision(3)} × ${size.y.toPrecision(3)} (width × depth × height, unknown units). The values above are a guess; replace them with the product's real size.` + (stored ? '' : ' Note: this browser cannot store models, so it will be gone after a reload unless you export the layout.');
+  $('#impRaw').textContent = (src ? `From ${src.lib}${src.by && src.by !== src.lib ? ', by ' + src.by : ''}: this is its real size in the model. Change it if the piece you have in mind differs.` : `In the file it measures ${size.x.toPrecision(3)} × ${size.z.toPrecision(3)} × ${size.y.toPrecision(3)} (width × depth × height, unknown units). The values above are a guess; replace them with the product's real size.`) + (stored ? '' : ' Note: this browser cannot store models, so it will be gone after a reload unless you export the layout.');
   $('#importModal').hidden = false;
   $('#impW').focus(); $('#impW').select();
 }
@@ -8010,7 +8219,7 @@ $('#impOk').onclick = () => {
   const w = parseFloat($('#impW').value) / 100, d = parseFloat($('#impD').value) / 100, h = parseFloat($('#impH').value) / 100;
   if (!(w > 0 && d > 0 && h > 0)) { toast('Enter width, depth and height in cm.'); return; }
   const p = pendingImport; $('#importModal').hidden = true; pendingImport = null;
-  startPlacing({ id: uid(), kind: 'model', model: p.key, name: $('#impName').value.trim() || 'Imported model', w, d, h, x: CENTER.x, z: CENTER.z, y: 0, rot: 0, fix: [0, 0, 0], lock: $('#impLock').checked, color: '#c9c3b8', stack: false });
+  startPlacing({ id: uid(), kind: 'model', model: p.key, name: $('#impName').value.trim() || 'Imported model', w, d, h, x: CENTER.x, z: CENTER.z, y: 0, rot: 0, fix: [0, 0, 0], lock: $('#impLock').checked, color: '#c9c3b8', stack: false, ...(p.credit ? { credit: p.credit } : {}) });
 };
 $('#importModal').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#impOk').click(); if (e.key === 'Escape') $('#impCancel').click(); });
 let dragDepth = 0;
@@ -8379,6 +8588,8 @@ async function connRun(tool, a) {
     case 'list_furniture': return connCatalog(a.category);
     case 'edit_house': if (HOUSE.outdoor) throw new Error('this is an outdoor space from the map: its paving and buildings cannot be edited; use set_floor for an area\'s paving and place_furniture for what stands on it'); say('changing the house…'); return connEdit(a.operations);
     case 'place_furniture': say('placing furniture…'); return connPlace(a.items);
+    case 'search_library': return connLibSearch(a);
+    case 'place_library_model': say('fetching a model…'); return connLibrary(a);
     case 'update_furniture': say('moving furniture…'); return connUpdate(a.items);
     case 'remove_furniture': say('removing furniture…'); return connRemove(a.ids);
     case 'paint': say('painting…'); return connPaint(a);

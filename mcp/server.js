@@ -19,7 +19,7 @@ const os = require('os');
 const crypto = require('crypto');
 const { spawn } = require('child_process');
 
-const VERSION = '1.0.0';
+const VERSION = '1.1.0';
 const PLANNER_URL = process.env.PLANNER_URL || 'https://unbxx.github.io/home-planner-3d/';
 const PLANNER_FILE = /\$\{/.test(process.env.PLANNER_FILE || '') ? '' : (process.env.PLANNER_FILE || '').trim(); // an unset Claude Desktop setting arrives as ${user_config.…}
 const FIRST_PORT = +process.env.PLANNER_PORT || 47380;
@@ -51,6 +51,35 @@ async function plannerHtml() {
     throw err;
   }
 }
+/* ---------- 3D Warehouse: one model at a time, by the link the user pasted ---------- */
+// 3D Warehouse does not let web pages fetch its files, so the planner asks here for the one model the user chose.
+// Only its own two hosts are asked, and only for that model's details and its public 3D copy (a GLB it makes for models under about 10 MB).
+const WAREHOUSE = 'https://3dwarehouse.sketchup.com/warehouse/v1.0/entities/';
+const WAREHOUSE_FILES = /^https:\/\/download-warehouse\.sketchup\.com\/warehouse\/v1\.0\/content\/public\//;
+async function warehouseModel(id) {
+  if (!/^[A-Za-z0-9-]{6,64}$/.test(id || '')) throw new Error('That is not a link to a 3D Warehouse model.');
+  const r = await fetch(WAREHOUSE + id + '?showBinaryMetadata=true', { signal: AbortSignal.timeout(20000) });
+  if (r.status === 404) throw new Error('3D Warehouse has no model at that link.');
+  if (!r.ok) throw new Error(`3D Warehouse answered ${r.status}.`);
+  const e = await r.json(), b = e.binaries || {}, pub = (k) => (b[k] && WAREHOUSE_FILES.test(b[k].contentUrl || '') ? b[k].contentUrl : null);
+  return { id: e.id || id, title: e.title || 'Model', author: (e.creator && e.creator.displayName) || '', page: `https://3dwarehouse.sketchup.com/model/${e.id || id}`, thumb: pub('bot_lt') || pub('bot_st'), glb: pub('glb') };
+}
+async function warehouseRoute(url, res) {
+  try {
+    const m = await warehouseModel(url.searchParams.get('id'));
+    if (url.pathname === '/lib/3dw') { res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }).end(JSON.stringify({ ...m, glb: !!m.glb })); return; }
+    if (!m.glb) throw new Error('3D Warehouse has no 3D copy of this model.');
+    const r = await fetch(m.glb, { signal: AbortSignal.timeout(90000) });
+    if (!r.ok) throw new Error(`3D Warehouse answered ${r.status} for the model file.`);
+    const buf = Buffer.from(await r.arrayBuffer());
+    if (buf.length > 100 * 1048576) throw new Error('The model file is over 100 MB.');
+    log(`3D Warehouse: ${m.title} (${(buf.length / 1048576).toFixed(1)} MB)`);
+    res.writeHead(200, { 'Content-Type': 'model/gltf-binary', 'Cache-Control': 'no-store' }).end(buf);
+  } catch (err) {
+    res.writeHead(502, { 'Content-Type': 'text/plain; charset=utf-8' }).end(err.name === 'TimeoutError' ? '3D Warehouse did not answer in time.' : err.message);
+  }
+}
+
 const clients = new Set();
 const pending = new Map();
 let seq = 0;
@@ -75,6 +104,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     if (req.method === 'GET' && url.pathname === '/mcp/hello' && keyOk) { res.writeHead(204).end(); return; }
+    if (req.method === 'GET' && (url.pathname === '/lib/3dw' || url.pathname === '/lib/3dw/glb') && keyOk) { await warehouseRoute(url, res); return; }
     if (req.method === 'POST' && url.pathname === '/mcp/result' && keyOk) {
       let body = '';
       req.setEncoding('utf8');
@@ -139,11 +169,12 @@ const INSTRUCTIONS = `Home planner 3D: a home in 3D at real size, open in the us
 Start with get_home (and list_furniture before placing furniture). Change walls, doors, windows, columns, beams and rooms with edit_house; furniture with place_furniture, update_furniture and remove_furniture; colours with paint and set_floor.
 Look at the result with screenshot (a 3D, plan or walk view, of a room if you like) and adjust: check overlaps reported for furniture, and keep about 70-90 cm free to walk past things.
 Furniture faces south at rot_deg 0 (90 = west, 180 = north, 270 = east), or say facing. A piece with its back against the north wall (z = 0) facing south has its centre at z = depth / 2.
-Every change shows at once in the user's tab and can be undone with undo. export_home saves the whole home as a file to share.`;
+Every change shows at once in the user's tab and can be undone with undo. export_home saves the whole home as a file to share.
+Ready-made models: search_library finds free Poly Haven models; place_library_model places one at its real size, or a 3D Warehouse model from a link the user gives you (3D Warehouse itself cannot be searched from here).`;
 const TOOLS = [
   { name: 'get_home', description: `Read the home open in the planner: its rooms (outline and area), walls (along their middle, with ids, thickness and their doors and windows), fixed parts (columns, beams, kitchen, bathroom), placed furniture, paint and floors. In ${CM}. Call it first, and again after changes.`,
     inputSchema: { type: 'object', properties: {} }, annotations: { readOnlyHint: true } },
-  { name: 'list_furniture', description: 'The furniture that can be placed: each preset with its name, category, default size in cm (width, depth, height) and its options (fronts, handles, colours, shapes and so on). Categories: Living, Dining, Sleeping, Work, Storage, Kitchen, Bathroom, On the wall, Parts of the house, Plants, Other.',
+  { name: 'list_furniture', description: 'The furniture that can be placed: each preset with its name, category, default size in cm (width, depth, height) and its options (fronts, handles, colours, shapes and so on). Categories: Living, Dining, Sleeping, Work, Storage, Kitchen, Bathroom, On the wall, Parts of the house, Plants, Outside, Other.',
     inputSchema: { type: 'object', properties: { category: { type: 'string', description: 'only this category' } } }, annotations: { readOnlyHint: true } },
   { name: 'edit_house', description: `Change the house itself, in one go, with a list of operations (${CM}). Walls are kept along their middle: moving one takes its corners and the walls joined to it along, and rooms follow their walls. Operations ("op"):
 - move_wall {wall, by_cm}: square to itself; + moves a wall that runs east-west to the south, one that runs north-south to the east
@@ -158,6 +189,10 @@ const TOOLS = [
     inputSchema: { type: 'object', properties: { operations: { type: 'array', items: { type: 'object', properties: { op: { type: 'string', enum: ['move_wall', 'set_wall', 'add_wall', 'add_opening', 'set_opening', 'add_part', 'set_part', 'add_room', 'name_room', 'delete'] } }, required: ['op'] } } }, required: ['operations'] } },
   { name: 'place_furniture', description: `Place furniture from the presets (see list_furniture). Per item: preset, centre_cm [x,z], facing (north|south|east|west) or rot_deg, size_cm [width, depth, height] (else the preset's), color "#rrggbb", options {key: value} from list_furniture, name, above_floor_cm (for things on a wall), on_furniture (rest on what is under it, as a lamp on a table). In ${CM}. Returns ids, and any overlap with walls or other pieces.`,
     inputSchema: { type: 'object', properties: { items: { type: 'array', items: { type: 'object', properties: { preset: { type: 'string' }, centre_cm: point, facing: { type: 'string', enum: ['north', 'south', 'east', 'west'] }, rot_deg: { type: 'number' }, size_cm: { type: 'array', items: { type: 'number' } }, color: { type: 'string' }, options: { type: 'object' }, name: { type: 'string' }, above_floor_cm: { type: 'number' }, on_furniture: { type: 'boolean' } }, required: ['preset', 'centre_cm'] } } }, required: ['items'] } },
+  { name: 'search_library', description: 'Search the free Poly Haven model library (CC0, real size): furniture, seating, tables, shelves, lighting, decorative things, plants, appliances. Returns model ids to give place_library_model.',
+    inputSchema: { type: 'object', properties: { query: { type: 'string' }, category: { type: 'string', enum: ['furniture', 'seating', 'table', 'shelves', 'lighting', 'decorative', 'plants', 'appliances', 'electronics', 'containers', 'all'] } } }, annotations: { readOnlyHint: true } },
+  { name: 'place_library_model', description: `Place a ready-made model at its real size: a Poly Haven model id from search_library, or the link of a 3D Warehouse model page (https://3dwarehouse.sketchup.com/model/…) that the user gave you. Optional centre_cm [x,z], facing or rot_deg, size_cm [width, depth, height] to change its size, name. In ${CM}. Afterwards it is moved like any placed piece (update_furniture).`,
+    inputSchema: { type: 'object', properties: { link: { type: 'string' }, centre_cm: point, facing: { type: 'string', enum: ['north', 'south', 'east', 'west'] }, rot_deg: { type: 'number' }, size_cm: { type: 'array', items: { type: 'number' } }, name: { type: 'string' } }, required: ['link'] } },
   { name: 'update_furniture', description: 'Move, turn, resize, recolour or change options of placed pieces: per item its id and any of the place_furniture fields.',
     inputSchema: { type: 'object', properties: { items: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, centre_cm: point, facing: { type: 'string', enum: ['north', 'south', 'east', 'west'] }, rot_deg: { type: 'number' }, size_cm: { type: 'array', items: { type: 'number' } }, color: { type: 'string' }, options: { type: 'object' }, name: { type: 'string' }, above_floor_cm: { type: 'number' }, on_furniture: { type: 'boolean' } }, required: ['id'] } } }, required: ['items'] } },
   { name: 'remove_furniture', description: 'Remove placed pieces by id.',
@@ -165,7 +200,7 @@ const TOOLS = [
   { name: 'paint', description: 'Paint a surface: target walls (all walls of a room), wall (one wall id, the face in that room), ceiling (of a room), door or frame (of a door or window id), or part (a column, beam, cupboard or radiator id). color "#rrggbb", or null to go back to the original.',
     inputSchema: { type: 'object', properties: { target: { type: 'string', enum: ['walls', 'wall', 'ceiling', 'door', 'frame', 'part'] }, room: { type: 'string', description: 'room id or name' }, wall: { type: 'string' }, opening: { type: 'string' }, part: { type: 'string' }, color: { type: ['string', 'null'] } }, required: ['target', 'color'] } },
   { name: 'set_floor', description: 'Lay a floor in a room ("all" for every room, "base" for the rest of the house): a design with optional colours (main, then grain or grout), plank or tile size in cm and direction in degrees; or original: true for the house\'s own floor.',
-    inputSchema: { type: 'object', properties: { room: { type: 'string' }, design: { type: 'string', enum: ['oak', 'lightoak', 'greyoak', 'walnut', 'smoked', 'herring', 'chevron', 'tile60', 'tile30', 'tilelong', 'checker', 'hex', 'mosaic', 'cement', 'marble', 'terrazzo', 'concrete', 'carpet', 'paint'] }, colors: { type: 'array', items: { type: 'string' } }, size_cm: { type: 'number' }, direction_deg: { type: 'number' }, original: { type: 'boolean' } }, required: ['room'] } },
+    inputSchema: { type: 'object', properties: { room: { type: 'string' }, design: { type: 'string', enum: ['oak', 'lightoak', 'greyoak', 'walnut', 'smoked', 'herring', 'chevron', 'tile60', 'tile30', 'tilelong', 'checker', 'hex', 'mosaic', 'cement', 'marble', 'terrazzo', 'concrete', 'carpet', 'paversHerring', 'paversBond', 'klinkers', 'stoep', 'asphalt', 'grass', 'planting', 'sand', 'water', 'paint'] }, colors: { type: 'array', items: { type: 'string' } }, size_cm: { type: 'number' }, direction_deg: { type: 'number' }, original: { type: 'boolean' } }, required: ['room'] } },
   { name: 'set_view', description: 'Change what the user sees: mode 3d, plan or walk; a room to look at (or stand in, when walking); walls up, cutaway or low (3D); ceilings on or off (3D); or a camera from_cm [x,y,z] and look_at_cm [x,y,z].',
     inputSchema: { type: 'object', properties: { mode: { type: 'string', enum: ['3d', 'plan', 'walk'] }, room: { type: 'string' }, walls: { type: 'string', enum: ['up', 'cutaway', 'low'] }, ceilings: { type: 'boolean' }, camera: { type: 'object', properties: { from_cm: { type: 'array', items: { type: 'number' } }, look_at_cm: { type: 'array', items: { type: 'number' } } } } } } },
   { name: 'screenshot', description: 'A picture of the planner, to see the design: optionally first set the view as in set_view. Plan view is best for layout, walk view for how a room feels.',
@@ -178,7 +213,7 @@ const TOOLS = [
   { name: 'open_home_file', description: 'Open a home, house or layout .json file from this computer in the planner (as exported with File → Export this home).',
     inputSchema: { type: 'object', properties: { path: { type: 'string' } }, required: ['path'] } },
 ];
-const PAGE_TOOLS = new Set(['get_home', 'list_furniture', 'edit_house', 'place_furniture', 'update_furniture', 'remove_furniture', 'paint', 'set_floor', 'set_view', 'houses', 'undo']);
+const PAGE_TOOLS = new Set(['get_home', 'list_furniture', 'edit_house', 'place_furniture', 'update_furniture', 'remove_furniture', 'paint', 'set_floor', 'set_view', 'houses', 'undo', 'search_library', 'place_library_model']);
 const text = (t) => ({ content: [{ type: 'text', text: typeof t === 'string' ? t : JSON.stringify(t) }] });
 const expand = (p) => path.resolve(String(p || '').replace(/^~(?=$|[\\/])/, os.homedir()));
 async function callTool(name, args) {
@@ -202,7 +237,7 @@ async function callTool(name, args) {
       return text(await callPage('open_home', { text: fs.readFileSync(file, 'utf8'), name: path.basename(file) }));
     }
     if (!PAGE_TOOLS.has(name)) throw new Error(`unknown tool ${name}`);
-    return text(await callPage(name, args));
+    return text(await callPage(name, args, name === 'place_library_model' ? 150000 : 60000));
   } catch (err) {
     return { content: [{ type: 'text', text: err.message }], isError: true };
   }

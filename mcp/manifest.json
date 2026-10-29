@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "home-planner-3d",
   "display_name": "Home planner 3D",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Let Claude change and furnish your home in the 3D home planner, live in your browser.",
   "long_description": "Claude can read your home, move and add walls, doors and windows, place and arrange furniture, paint walls and ceilings, lay floors and take pictures of the result to check it. The planner opens in your browser on this computer and shows every change as it happens; you can keep editing by hand, undo, and export the home to share. Nothing leaves your computer except loading the planner page itself.",
   "author": {
@@ -29,6 +29,8 @@
   "tools": [
     { "name": "get_home", "description": "Read the rooms, walls, doors, windows, furniture, paint and floors" },
     { "name": "list_furniture", "description": "The furniture that can be placed, with sizes and options" },
+    { "name": "search_library", "description": "Search the free Poly Haven model library" },
+    { "name": "place_library_model", "description": "Place a Poly Haven model, or a 3D Warehouse model from its link, at real size" },
     { "name": "edit_house", "description": "Move, add or remove walls, doors, windows, columns, beams and rooms" },
     { "name": "place_furniture", "description": "Place furniture at a spot, size, colour and direction" },
     { "name": "update_furniture", "description": "Move, turn, resize or recolour placed furniture" },
