@@ -19,13 +19,15 @@ Everything you do is saved in your own browser, per house. Nothing is uploaded a
 
 - **Views**: orbit the whole home, look straight down, or walk through it (W A S D or arrow keys, drag to look, double-click the floor to go there). **Look around** (L) in walk view turns your head with the mouse alone, as in a game, so you can wander without clicking anything; Esc stops. While walking, a piece moves only after you click it first, so looking around never drags furniture by accident. Doors open and close (double-click, or E while walking).
 - **Edit house**: change walls, doors, windows, columns, beams and rooms right in the 3D, plan and walk views.
-- **Floors**: a floor per room, from nineteen designs or a photo of your own.
+- **Floors**: a floor per room, from twenty-eight designs (wood, tiles, stone, and outdoor paving, grass and water) or a photo of your own.
 - **Kitchen and bathroom**: cabinets, appliances, sinks, washbasins, mirrors, showers, baths and toilets, each with its own fronts, handles and colours.
 - **Furniture**: sofas, beds, tables, chairs, storage, rugs, plants, lamps, shelves, wall art and more. Small things rest on what they are put on (a worktop, a shelf, a sofa seat), and *On a shelf of …* puts them on a chosen shelf of a bookcase or rack.
 - **Your own models**: *Import 3D model* (GLB works best; GLTF, OBJ, STL and FBX too). You type the real size from the product page and the model is scaled to exactly that.
 - **Checking the fit**: a red outline when a piece runs into a wall or another piece, the free space around the selected piece, and a measuring tool.
 - **Paint**: any wall, each room's ceiling, the window reveals, frames, doors and radiators, with the area per colour to work out how much paint to buy.
 - **Ceilings**: always there in Walk view (look up, and click one with Paint). In 3D, **Ceiling** (C) shows them when you look up from inside a room or through the cutaway; from above they stay out of the way.
+- **Outside**: market stalls in any length (canvas, stripes, sides and what is on the counter), a sales trailer, party tents, parasols, terrace and picnic tables, benches, bins, trees, street lamps, crowd barriers, a stage, a car and a person for scale.
+- **Outdoor spaces**: a square or street opened from a home file (File → Open) shows under an open sky, with the buildings around it as blocks at their real height, and its own paving per area.
 - **Several houses**: switch between them from the house name at the top left; each keeps its own furniture and paint.
 - **Room photos**: under *Rooms*, *+ Photos* keeps photos of each room next to it, to look back at while you furnish.
 - **Claude**: with the connector below, Claude can change and furnish the home for you while you watch.
